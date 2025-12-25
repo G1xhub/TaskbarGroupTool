@@ -35,3 +35,4 @@ C:\Users\jgrae\CascadeProjects\TaskbarGroupTool\obj\Debug\net8.0-windows\Windows
 C:\Users\jgrae\CascadeProjects\TaskbarGroupTool\obj\Debug\net8.0-windows\Windows\AddApplicationWindow.g.cs
 C:\Users\jgrae\CascadeProjects\TaskbarGroupTool\obj\Debug\net8.0-windows\Windows\GroupMenuWindow.baml
 C:\Users\jgrae\CascadeProjects\TaskbarGroupTool\obj\Debug\net8.0-windows\Windows\GroupMenuWindow.g.cs
+C:\Users\jgrae\CascadeProjects\TaskbarGroupTool\obj\Debug\net8.0-windows\TaskbarGroupTool.sourcelink.json
