@@ -1,0 +1,226 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Linq;
+using System.IO;
+using TaskbarGroupTool.Models;
+using TaskbarGroupTool.Services;
+
+namespace TaskbarGroupTool.ViewModels
+{
+    public class MainViewModel : INotifyPropertyChanged
+    {
+        private readonly TaskbarManager taskbarManager;
+        private readonly ApplicationSearchService searchService;
+        private TaskbarGroup selectedGroup;
+        private string groupName;
+        private string searchTerm;
+
+        public ObservableCollection<TaskbarGroup> Groups { get; set; }
+        public ObservableCollection<SearchResult> SearchResults { get; set; }
+
+        public TaskbarGroup SelectedGroup
+        {
+            get => selectedGroup;
+            set
+            {
+                selectedGroup = value;
+                OnPropertyChanged();
+                
+                if (selectedGroup != null)
+                {
+                    GroupName = selectedGroup.Name;
+                }
+            }
+        }
+
+        public string GroupName
+        {
+            get => groupName;
+            set
+            {
+                groupName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string SearchTerm
+        {
+            get => searchTerm;
+            set
+            {
+                searchTerm = value;
+                OnPropertyChanged();
+                
+                if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
+                {
+                    PerformSearch();
+                }
+                else
+                {
+                    SearchResults.Clear();
+                }
+            }
+        }
+
+        public MainViewModel()
+        {
+            taskbarManager = new TaskbarManager();
+            searchService = new ApplicationSearchService();
+            Groups = new ObservableCollection<TaskbarGroup>();
+            SearchResults = new ObservableCollection<SearchResult>();
+            LoadGroups();
+        }
+
+        private void LoadGroups()
+        {
+            try
+            {
+                var groups = taskbarManager.LoadGroups();
+                Groups.Clear();
+                
+                foreach (var group in groups)
+                {
+                    Groups.Add(group);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Error loading groups: {ex.Message}", "Error", 
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        private void PerformSearch()
+        {
+            try
+            {
+                var results = searchService.SearchApplications(searchTerm);
+                SearchResults.Clear();
+                
+                foreach (var result in results.Take(20))
+                {
+                    SearchResults.Add(result);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Search error: {ex.Message}", "Error", 
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        public void SaveGroups()
+        {
+            try
+            {
+                var groupsList = new System.Collections.Generic.List<TaskbarGroup>(Groups);
+                taskbarManager.SaveGroups(groupsList);
+            }
+            catch (System.Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Error saving groups: {ex.Message}", "Error", 
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        public void AddNewGroup()
+        {
+            var newGroup = new TaskbarGroup("New Group");
+            Groups.Add(newGroup);
+            SelectedGroup = newGroup;
+        }
+
+        public void DeleteSelectedGroup()
+        {
+            if (SelectedGroup != null)
+            {
+                Groups.Remove(SelectedGroup);
+                SelectedGroup = null;
+                SaveGroups();
+            }
+        }
+
+        public void SaveSelectedGroup()
+        {
+            if (SelectedGroup != null)
+            {
+                SelectedGroup.Name = GroupName;
+                SaveGroups();
+                
+                // Update the display name in the Groups collection
+                var index = Groups.IndexOf(SelectedGroup);
+                if (index >= 0)
+                {
+                    Groups.RemoveAt(index);
+                    Groups.Insert(index, SelectedGroup);
+                    SelectedGroup = Groups[index]; // Re-select to maintain selection
+                }
+            }
+        }
+
+        public void AddApplicationToGroup(string applicationPath)
+        {
+            if (SelectedGroup != null && !string.IsNullOrEmpty(applicationPath))
+            {
+                if (!SelectedGroup.Applications.Contains(applicationPath))
+                {
+                    SelectedGroup.Applications.Add(applicationPath);
+                    SaveGroups();
+                }
+            }
+        }
+
+        public void RemoveApplicationFromGroup(string applicationPath)
+        {
+            if (SelectedGroup != null && SelectedGroup.Applications.Contains(applicationPath))
+            {
+                SelectedGroup.Applications.Remove(applicationPath);
+                SaveGroups();
+            }
+        }
+
+        public void CreateTaskbarShortcut()
+        {
+            if (SelectedGroup != null)
+            {
+                try
+                {
+                    taskbarManager.CreateTaskbarShortcut(SelectedGroup);
+                    
+                    var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                    var shortcutsPath = Path.Combine(Path.GetDirectoryName(appPath), "Shortcuts");
+                    var shortcutPath = Path.Combine(shortcutsPath, $"{SelectedGroup.Name}.lnk");
+                    
+                    var message = $"Taskbar shortcut for '{SelectedGroup.Name}' has been created.\n\n" +
+                                 $"Shortcut location: {shortcutPath}\n\n" +
+                                 "To pin to taskbar:\n" +
+                                 "1. Navigate to the Shortcuts folder\n" +
+                                 "2. Right-click on the shortcut\n" +
+                                 "3. Select 'Pin to taskbar'\n\n" +
+                                 $"Would you like to open the Shortcuts folder now?";
+                    
+                    var result = System.Windows.MessageBox.Show(message, 
+                        "Success", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information);
+                    
+                    if (result == System.Windows.MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start("explorer.exe", shortcutsPath);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Error creating shortcut: {ex.Message}", "Error", 
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

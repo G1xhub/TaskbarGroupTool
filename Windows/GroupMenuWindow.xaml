@@ -1,0 +1,16 @@
+<Window x:Class="TaskbarGroupTool.Windows.GroupMenuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Group Menu" Height="Auto" Width="Auto"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True">
+    
+    <Border Name="MainBorder" CornerRadius="8" Background="#2C3E50" Padding="10">
+        <StackPanel Name="MainPanel" Orientation="Vertical">
+            <!-- Items will be added dynamically -->
+        </StackPanel>
+    </Border>
+</Window>

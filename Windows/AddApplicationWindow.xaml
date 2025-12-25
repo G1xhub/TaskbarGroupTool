@@ -1,0 +1,64 @@
+<Window x:Class="TaskbarGroupTool.Windows.AddApplicationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Add Application" Height="500" Width="600"
+        WindowStartupLocation="CenterOwner"
+        Background="#F0F0F0"
+        ResizeMode="NoResize">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Add Application to Group" 
+                   FontSize="18" FontWeight="SemiBold" 
+                   Margin="0,0,0,20" Foreground="#2C3E50"/>
+        
+        <!-- Search Section -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Search Controls -->
+            <Grid Grid.Row="0" Margin="0,0,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBox Name="SearchTextBox" Grid.Column="0" Height="35" Padding="10,5"
+                         Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                         KeyUp="SearchTextBox_KeyUp"/>
+                <Button Name="SearchButton" Grid.Column="1" Content="Search" 
+                        Margin="5,0,5,0" Padding="15,5" Click="SearchButton_Click"/>
+                <Button Name="BrowseButton" Grid.Column="2" Content="Browse" 
+                        Padding="15,5" Click="BrowseButton_Click"/>
+            </Grid>
+            
+            <!-- Search Results -->
+            <Border Grid.Row="1" Background="White" CornerRadius="8" BorderThickness="1" BorderBrush="#DDD">
+                <ListBox Name="SearchResultsListBox" 
+                         ItemsSource="{Binding SearchResults}"
+                         DisplayMemberPath="Name"
+                         MouseDoubleClick="SearchResultsListBox_MouseDoubleClick"
+                         Height="300"/>
+            </Border>
+        </Grid>
+        
+        <!-- Footer Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" 
+                    HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Name="AddButton" Content="Add Selected" 
+                    Margin="0,0,10,0" Padding="15,8" Click="AddButton_Click"/>
+            <Button Name="CancelButton" Content="Cancel" 
+                    Padding="15,8" Click="CancelButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
