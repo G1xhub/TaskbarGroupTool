@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TaskbarGroupTool")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a5e9655fb1528ab780226bdae3dd2c9b3ac6cb4d")]
 [assembly: System.Reflection.AssemblyProductAttribute("TaskbarGroupTool")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Taskbar Grouping Tool")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

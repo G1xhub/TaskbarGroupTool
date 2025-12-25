@@ -28,57 +28,21 @@ namespace TaskbarGroupTool.Windows
         {
             InitializeComponent();
             
+            // Load the group
+            currentGroup = LoadGroup(groupName);
+            
             // Set basic window properties
             Title = $"Group: {groupName}";
             Width = 300;
             Height = 200;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             
-            // Create a simple test content
-            var stackPanel = new StackPanel
-            {
-                Orientation = System.Windows.Controls.Orientation.Vertical,
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                VerticalAlignment = System.Windows.VerticalAlignment.Center
-            };
+            // Create menu items for applications
+            LoadMenuItems();
             
-            var textBlock = new TextBlock
-            {
-                Text = $"Group: {groupName}\n\nThis is the group menu window!\n\nApplications would appear here.\n\nClick Close to exit.",
-                TextAlignment = TextAlignment.Center,
-                FontSize = 14,
-                Foreground = Brushes.White,
-                Margin = new Thickness(20)
-            };
-            
-            var closeButton = new System.Windows.Controls.Button
-            {
-                Content = "Close",
-                Margin = new Thickness(20),
-                Width = 100,
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Center
-            };
-            closeButton.Click += (s, e) => Close();
-            
-            stackPanel.Children.Add(textBlock);
-            stackPanel.Children.Add(closeButton);
-            
-            MainBorder.Child = stackPanel;
-            
-            // Only add keyboard handler - don't auto-close on deactivate
+            // Close when deactivated
+            Deactivated += GroupMenuWindow_Deactivated;
             KeyDown += GroupMenuWindow_KeyDown;
-            
-            // Delay the auto-close to give the window time to appear
-            var timer = new System.Windows.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(500)
-            };
-            timer.Tick += (s, e) =>
-            {
-                timer.Stop();
-                Deactivated += GroupMenuWindow_Deactivated;
-            };
-            timer.Start();
         }
 
         private TaskbarGroup LoadGroup(string groupName)
@@ -107,20 +71,43 @@ namespace TaskbarGroupTool.Windows
 
         private void LoadMenuItems()
         {
-            MainPanel.Children.Clear();
-            menuItems.Clear();
-
-            foreach (var appPath in currentGroup.Applications)
+            var stackPanel = new StackPanel
             {
-                var menuItem = CreateMenuItem(appPath);
-                MainPanel.Children.Add(menuItem);
-                menuItems.Add(menuItem);
+                Orientation = System.Windows.Controls.Orientation.Vertical,
+                Margin = new Thickness(10)
+            };
+            
+            if (currentGroup != null && currentGroup.Applications.Any())
+            {
+                foreach (var appPath in currentGroup.Applications)
+                {
+                    var item = CreateMenuItem(appPath);
+                    stackPanel.Children.Add(item);
+                }
             }
-
+            else
+            {
+                var noAppsText = new TextBlock
+                {
+                    Text = "No applications in this group",
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                    Margin = new Thickness(20),
+                    Foreground = Brushes.White,
+                    FontSize = 14,
+                    FontWeight = FontWeights.Bold,
+                    TextWrapping = TextWrapping.Wrap
+                };
+                stackPanel.Children.Add(noAppsText);
+            }
+            
+            // Use MainPanel instead of MainBorder
+            MainPanel.Children.Add(stackPanel);
+            
             // Set window size based on content
             Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            Width = Math.Max(200, DesiredSize.Width + 40);
-            Height = DesiredSize.Height + 40;
+            Width = Math.Max(300, DesiredSize.Width + 40);
+            Height = Math.Max(150, DesiredSize.Height + 40);
         }
 
         private Border CreateMenuItem(string appPath)
