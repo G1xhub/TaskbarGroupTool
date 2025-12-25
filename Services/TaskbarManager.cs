@@ -81,8 +81,8 @@ namespace TaskbarGroupTool.Services
 
                 var shortcutPath = Path.Combine(shortcutsPath, $"{group.Name}.lnk");
 
-                // Use provided icon path or default to app path
-                var finalIconPath = iconPath ?? appPath;
+                // Use provided icon path, default to logo, or fallback to app path
+                var finalIconPath = iconPath ?? Path.Combine(Path.GetDirectoryName(appPath), "icons", "logo.ico") ?? appPath;
 
                 // Verwenden der COM-basierten ShellLink-Implementierung
                 ShellLinkService.InstallShortcut(

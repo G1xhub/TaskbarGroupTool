@@ -3,7 +3,99 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Taskbar Grouping Tool" Height="700" Width="900"
         WindowStartupLocation="CenterScreen"
-        Background="#F0F0F0">
+        Background="#F8F9FA">
+    
+    <Window.Resources>
+        <!-- Modern Button Style -->
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="#6366F1"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#4F46E5"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#4338CA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Secondary Button Style -->
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#D1D5DB"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#9CA3AF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Danger Button Style -->
+        <Style x:Key="DangerButton" TargetType="Button">
+            <Setter Property="Background" Value="#EF4444"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#DC2626"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#B91C1C"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
@@ -13,11 +105,15 @@
         </Grid.RowDefinitions>
         
         <!-- Header -->
-        <Border Grid.Row="0" Background="#2C3E50" Padding="20">
-            <TextBlock Text="Taskbar Grouping Tool" 
-                       FontSize="24" 
-                       FontWeight="Bold" 
-                       Foreground="White"/>
+        <Border Grid.Row="0" Background="#1F2937" Padding="24">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Image Source="icons/logo.ico" Width="32" Height="32" Margin="0,0,16,0"/>
+                <TextBlock Text="Taskbar Grouping Tool" 
+                           FontSize="28" 
+                           FontWeight="SemiBold" 
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
         </Border>
         
         <!-- Main Content -->
@@ -28,14 +124,15 @@
             </Grid.ColumnDefinitions>
             
             <!-- Groups List -->
-            <Border Grid.Column="0" Background="White" CornerRadius="8" Margin="0,0,10,0">
-                <StackPanel Margin="15">
-                    <TextBlock Text="Groups" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
-                    <ListBox Name="GroupsListBox" Height="350" BorderThickness="1" BorderBrush="#DDD"
+            <Border Grid.Column="0" Background="White" CornerRadius="12" Margin="0,0,12,0" 
+                    BorderBrush="#E5E7EB" BorderThickness="1">
+                <StackPanel Margin="20">
+                    <TextBlock Text="Groups" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F2937"/>
+                    <ListBox Name="GroupsListBox" Height="350" BorderThickness="0" Background="#F9FAFB"
                              ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}"/>
                     
                     <!-- Search Section -->
-                    <TextBlock Text="Search Applications" FontSize="16" FontWeight="SemiBold" Margin="0,20,0,10"/>
+                    <TextBlock Text="Search Applications" FontSize="16" FontWeight="Medium" Margin="0,24,0,12" Foreground="#374151"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -43,54 +140,63 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         
-                        <TextBox Name="SearchTextBox" Grid.Column="0" Height="35" Padding="10,5"
+                        <TextBox Name="SearchTextBox" Grid.Column="0" Height="40" Padding="12,8"
                                  Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
-                                 KeyUp="SearchTextBox_KeyUp"/>
+                                 KeyUp="SearchTextBox_KeyUp" BorderThickness="1" BorderBrush="#D1D5DB"
+                                 Background="White" FontSize="14"/>
                         <Button Name="SearchButton" Grid.Column="1" Content="Search" 
-                                Margin="5,0,5,0" Padding="15,5" Click="SearchButton_Click"/>
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="8,0,8,0" Click="SearchButton_Click"/>
                         <Button Name="BrowseButton" Grid.Column="2" Content="Browse" 
-                                Padding="15,5" Click="BrowseButton_Click"/>
+                                Style="{StaticResource SecondaryButton}" Click="BrowseButton_Click"/>
                     </Grid>
                     
                     <!-- Search Results -->
-                    <ListBox Name="SearchResultsListBox" Height="200" BorderThickness="1" BorderBrush="#DDD"
-                             Margin="0,10,0,0" MouseDoubleClick="SearchResultsListBox_MouseDoubleClick"
+                    <ListBox Name="SearchResultsListBox" Height="200" BorderThickness="1" BorderBrush="#E5E7EB"
+                             Margin="0,12,0,0" Background="White" MouseDoubleClick="SearchResultsListBox_MouseDoubleClick"
                              DisplayMemberPath="Name"/>
                 </StackPanel>
             </Border>
             
             <!-- Group Details -->
-            <Border Grid.Column="1" Background="White" CornerRadius="8">
-                <StackPanel Margin="15">
-                    <TextBlock Text="Group Details" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
+            <Border Grid.Column="1" Background="White" CornerRadius="12" 
+                    BorderBrush="#E5E7EB" BorderThickness="1">
+                <StackPanel Margin="20">
+                    <TextBlock Text="Group Details" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F2937"/>
                     
-                    <TextBlock Text="Group Name:" Margin="0,0,0,5"/>
-                    <TextBox Name="GroupNameTextBox" Text="{Binding GroupName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
+                    <TextBlock Text="Group Name:" Margin="0,0,0,8" FontWeight="Medium" Foreground="#374151"/>
+                    <TextBox Name="GroupNameTextBox" Text="{Binding GroupName, UpdateSourceTrigger=PropertyChanged}" 
+                             Margin="0,0,0,20" Height="40" Padding="12,8" BorderThickness="1" BorderBrush="#D1D5DB"
+                             Background="White" FontSize="14"/>
                     
-                    <TextBlock Text="Applications:" Margin="0,0,0,5"/>
-                    <ListBox Name="ApplicationsListBox" Height="150" BorderThickness="1" BorderBrush="#DDD"
-                             ItemsSource="{Binding SelectedGroup.Applications}"/>
+                    <TextBlock Text="Applications:" Margin="0,0,0,8" FontWeight="Medium" Foreground="#374151"/>
+                    <ListBox Name="ApplicationsListBox" Height="150" BorderThickness="1" BorderBrush="#E5E7EB"
+                             ItemsSource="{Binding SelectedGroup.Applications}" Background="White"/>
                     
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                         <Button Name="MoveUpButton" Content="↑" 
-                                Margin="0,0,5,0" Padding="8,4" Width="30" Click="MoveUpButton_Click"/>
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="0,0,8,0" Width="40" Height="36" Click="MoveUpButton_Click"/>
                         <Button Name="MoveDownButton" Content="↓" 
-                                Margin="0,0,5,0" Padding="8,4" Width="30" Click="MoveDownButton_Click"/>
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="0,0,8,0" Width="40" Height="36" Click="MoveDownButton_Click"/>
                         <Button Name="AddApplicationButton" Content="Add" 
-                                Margin="0,0,5,0" Padding="8,4" Background="#E74C3C" Foreground="White"/>
+                                Style="{StaticResource ModernButton}"
+                                Margin="0,0,8,0" Click="AddApplicationButton_Click"/>
                         <Button Name="DeleteApplicationButton" Content="Remove" 
-                                Background="#E74C3C" Foreground="White" Padding="8,4"/>
+                                Style="{StaticResource DangerButton}" Click="DeleteApplicationButton_Click"/>
                     </StackPanel>
                     
-                    <TextBlock Text="Shortcut Icon:" Margin="0,15,0,5"/>
+                    <TextBlock Text="Shortcut Icon:" Margin="0,20,0,8" FontWeight="Medium" Foreground="#374151"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         
-                        <ComboBox Name="IconComboBox" Grid.Column="0" Height="30" 
-                                  SelectedValue="{Binding SelectedIconPath}" SelectedValuePath="Path">
+                        <ComboBox Name="IconComboBox" Grid.Column="0" Height="40" 
+                                  SelectedValue="{Binding SelectedIconPath}" SelectedValuePath="Path"
+                                  BorderThickness="1" BorderBrush="#D1D5DB" Background="White" FontSize="14">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -101,27 +207,31 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                         <Button Name="BrowseIconButton" Grid.Column="1" Content="Browse" 
-                                Margin="5,0,0,0" Padding="8,3" Click="BrowseIconButton_Click"/>
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="8,0,0,0" Click="BrowseIconButton_Click"/>
                     </Grid>
                     
                     <Button Name="CreateShortcutButton" Content="Create Taskbar Shortcut" 
-                            Margin="0,15,0,0" Padding="10,5" Click="CreateShortcutButton_Click"/>
+                            Style="{StaticResource ModernButton}"
+                            Margin="0,20,0,0" Click="CreateShortcutButton_Click"/>
                     
                     <TextBlock Text="Note: After creating the shortcut, right-click on it and select 'Pin to taskbar'" 
-                               FontSize="12" Foreground="#666" TextWrapping="Wrap" Margin="0,15,0,0"/>
+                               FontSize="12" Foreground="#6B7280" TextWrapping="Wrap" Margin="0,16,0,0"/>
                 </StackPanel>
             </Border>
         </Grid>
         
         <!-- Footer -->
-        <Border Grid.Row="2" Background="#ECF0F1" Padding="20">
+        <Border Grid.Row="2" Background="#F3F4F6" Padding="24">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Name="NewGroupButton" Content="New Group" 
-                        Margin="0,0,10,0" Padding="15,8"/>
+                        Style="{StaticResource SecondaryButton}"
+                        Margin="0,0,12,0" Click="NewGroupButton_Click"/>
                 <Button Name="SaveGroupButton" Content="Save" 
-                        Margin="0,0,10,0" Padding="15,8"/>
+                        Style="{StaticResource ModernButton}"
+                        Margin="0,0,12,0" Click="SaveGroupButton_Click"/>
                 <Button Name="DeleteGroupButton" Content="Delete" 
-                        Background="#E74C3C" Foreground="White" Padding="15,8"/>
+                        Style="{StaticResource DangerButton}" Click="DeleteGroupButton_Click"/>
             </StackPanel>
         </Border>
     </Grid>
