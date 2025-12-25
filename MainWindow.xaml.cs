@@ -6,6 +6,7 @@ using Microsoft.Win32;
 using TaskbarGroupTool.ViewModels;
 using TaskbarGroupTool.Services;
 using TaskbarGroupTool.Windows;
+using TaskbarGroupTool.Models;
 
 namespace TaskbarGroupTool
 {
@@ -39,6 +40,12 @@ namespace TaskbarGroupTool
             CreateShortcutButton.Click += CreateShortcutButton_Click;
             SearchButton.Click += SearchButton_Click;
             BrowseButton.Click += BrowseButton_Click;
+            BrowseIconButton.Click += BrowseIconButton_Click;
+            MoveUpButton.Click += MoveUpButton_Click;
+            MoveDownButton.Click += MoveDownButton_Click;
+            
+            // Load preset icons
+            IconComboBox.ItemsSource = IconManager.LoadPresetIcons();
         }
 
         private void NewGroupButton_Click(object sender, RoutedEventArgs e)
@@ -92,9 +99,45 @@ namespace TaskbarGroupTool
             }
         }
 
+        private void MoveUpButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedApp = ApplicationsListBox.SelectedItem as string;
+            if (selectedApp != null)
+            {
+                viewModel.MoveApplicationUp(selectedApp);
+            }
+        }
+
+        private void MoveDownButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedApp = ApplicationsListBox.SelectedItem as string;
+            if (selectedApp != null)
+            {
+                viewModel.MoveApplicationDown(selectedApp);
+            }
+        }
+
         private void CreateShortcutButton_Click(object sender, RoutedEventArgs e)
         {
-            viewModel.CreateTaskbarShortcut();
+            var selectedIcon = IconComboBox.SelectedItem as IconItem;
+            string iconPath = selectedIcon?.Path;
+            viewModel.CreateTaskbarShortcut(iconPath);
+        }
+
+        private void BrowseIconButton_Click(object sender, RoutedEventArgs e)
+        {
+            var iconPath = IconManager.BrowseForIcon();
+            if (!string.IsNullOrEmpty(iconPath))
+            {
+                // Add custom icon to the combo box
+                var customIcon = new IconItem("Custom", iconPath);
+                var icons = IconComboBox.ItemsSource as System.Collections.ObjectModel.ObservableCollection<IconItem>;
+                if (icons != null)
+                {
+                    icons.Add(customIcon);
+                    IconComboBox.SelectedItem = customIcon;
+                }
+            }
         }
 
         private void SearchButton_Click(object sender, RoutedEventArgs e)

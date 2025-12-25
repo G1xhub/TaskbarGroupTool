@@ -9,6 +9,7 @@
     <AssemblyDescription>Ein Tool zum Erstellen von Gruppen in der Windows 11 Taskbar</AssemblyDescription>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <StartupObject>TaskbarGroupTool.App</StartupObject>
+    <ApplicationIcon>icons\logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
