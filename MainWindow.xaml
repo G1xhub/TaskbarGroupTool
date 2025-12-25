@@ -72,14 +72,40 @@
                              ItemsSource="{Binding SelectedGroup.Applications}"/>
                     
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Name="MoveUpButton" Content="↑" 
+                                Margin="0,0,5,0" Padding="8,4" Width="30" Click="MoveUpButton_Click"/>
+                        <Button Name="MoveDownButton" Content="↓" 
+                                Margin="0,0,5,0" Padding="8,4" Width="30" Click="MoveDownButton_Click"/>
                         <Button Name="AddApplicationButton" Content="Add" 
                                 Margin="0,0,5,0" Padding="8,4" Background="#E74C3C" Foreground="White"/>
                         <Button Name="DeleteApplicationButton" Content="Remove" 
                                 Background="#E74C3C" Foreground="White" Padding="8,4"/>
                     </StackPanel>
                     
+                    <TextBlock Text="Shortcut Icon:" Margin="0,15,0,5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <ComboBox Name="IconComboBox" Grid.Column="0" Height="30" 
+                                  SelectedValue="{Binding SelectedIconPath}" SelectedValuePath="Path">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="{Binding Icon}" Width="16" Height="16" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Name="BrowseIconButton" Grid.Column="1" Content="Browse" 
+                                Margin="5,0,0,0" Padding="8,3" Click="BrowseIconButton_Click"/>
+                    </Grid>
+                    
                     <Button Name="CreateShortcutButton" Content="Create Taskbar Shortcut" 
-                            Margin="0,15,0,0" Padding="10,5"/>
+                            Margin="0,15,0,0" Padding="10,5" Click="CreateShortcutButton_Click"/>
                     
                     <TextBlock Text="Note: After creating the shortcut, right-click on it and select 'Pin to taskbar'" 
                                FontSize="12" Foreground="#666" TextWrapping="Wrap" Margin="0,15,0,0"/>

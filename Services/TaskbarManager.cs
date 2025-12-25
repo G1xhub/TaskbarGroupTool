@@ -62,7 +62,7 @@ namespace TaskbarGroupTool.Services
             }
         }
 
-        public void CreateTaskbarShortcut(TaskbarGroup group)
+        public void CreateTaskbarShortcut(TaskbarGroup group, string iconPath = null)
         {
             try
             {
@@ -81,13 +81,16 @@ namespace TaskbarGroupTool.Services
 
                 var shortcutPath = Path.Combine(shortcutsPath, $"{group.Name}.lnk");
 
+                // Use provided icon path or default to app path
+                var finalIconPath = iconPath ?? appPath;
+
                 // Verwenden der COM-basierten ShellLink-Implementierung
                 ShellLinkService.InstallShortcut(
                     appPath,
                     $"TaskbarGroupTool.menu.{group.Name}",
                     $"Taskbar Group: {group.Name}",
                     Path.GetDirectoryName(appPath),
-                    appPath,
+                    finalIconPath,
                     shortcutPath,
                     group.Name
                 );

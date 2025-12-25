@@ -180,13 +180,51 @@ namespace TaskbarGroupTool.ViewModels
             }
         }
 
-        public void CreateTaskbarShortcut()
+        public void MoveApplicationUp(string applicationPath)
+        {
+            if (SelectedGroup != null && SelectedGroup.Applications.Contains(applicationPath))
+            {
+                var index = SelectedGroup.Applications.IndexOf(applicationPath);
+                if (index > 0)
+                {
+                    SelectedGroup.Applications.RemoveAt(index);
+                    SelectedGroup.Applications.Insert(index - 1, applicationPath);
+                    SaveGroups();
+                    
+                    // Update selection in UI
+                    var appsList = SelectedGroup.Applications.ToList();
+                    var newIndex = appsList.IndexOf(applicationPath);
+                    // The UI will update automatically through data binding
+                }
+            }
+        }
+
+        public void MoveApplicationDown(string applicationPath)
+        {
+            if (SelectedGroup != null && SelectedGroup.Applications.Contains(applicationPath))
+            {
+                var index = SelectedGroup.Applications.IndexOf(applicationPath);
+                if (index < SelectedGroup.Applications.Count - 1)
+                {
+                    SelectedGroup.Applications.RemoveAt(index);
+                    SelectedGroup.Applications.Insert(index + 1, applicationPath);
+                    SaveGroups();
+                    
+                    // Update selection in UI
+                    var appsList = SelectedGroup.Applications.ToList();
+                    var newIndex = appsList.IndexOf(applicationPath);
+                    // The UI will update automatically through data binding
+                }
+            }
+        }
+
+        public void CreateTaskbarShortcut(string iconPath = null)
         {
             if (SelectedGroup != null)
             {
                 try
                 {
-                    taskbarManager.CreateTaskbarShortcut(SelectedGroup);
+                    taskbarManager.CreateTaskbarShortcut(SelectedGroup, iconPath);
                     
                     var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
                     var shortcutsPath = Path.Combine(Path.GetDirectoryName(appPath), "Shortcuts");
