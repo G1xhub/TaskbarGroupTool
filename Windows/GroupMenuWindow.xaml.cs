@@ -33,8 +33,8 @@ namespace TaskbarGroupTool.Windows
             
             // Set basic window properties
             Title = $"Group: {groupName}";
-            Width = 300;
-            Height = 200;
+            Width = 300;  // Initial width, will be adjusted
+            Height = 150; // Initial height, will be adjusted
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             
             // Create menu items for applications
@@ -74,8 +74,10 @@ namespace TaskbarGroupTool.Windows
             var stackPanel = new StackPanel
             {
                 Orientation = System.Windows.Controls.Orientation.Vertical,
-                Margin = new Thickness(10)
+                Margin = new Thickness(5) // Reduced from 10
             };
+            
+            int appCount = 0;
             
             if (currentGroup != null && currentGroup.Applications.Any())
             {
@@ -83,6 +85,7 @@ namespace TaskbarGroupTool.Windows
                 {
                     var item = CreateMenuItem(appPath);
                     stackPanel.Children.Add(item);
+                    appCount++;
                 }
             }
             else
@@ -92,9 +95,9 @@ namespace TaskbarGroupTool.Windows
                     Text = "No applications in this group",
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                     VerticalAlignment = System.Windows.VerticalAlignment.Center,
-                    Margin = new Thickness(20),
+                    Margin = new Thickness(15), // Reduced from 20
                     Foreground = Brushes.White,
-                    FontSize = 14,
+                    FontSize = 12,
                     FontWeight = FontWeights.Bold,
                     TextWrapping = TextWrapping.Wrap
                 };
@@ -104,10 +107,94 @@ namespace TaskbarGroupTool.Windows
             // Use MainPanel instead of MainBorder
             MainPanel.Children.Add(stackPanel);
             
-            // Set window size based on content
+            // Simple size calculation based on app count
+            CalculateSimpleSize(appCount);
+        }
+        
+        private void CalculateSimpleSize(int appCount)
+        {
+            // Base size - no padding at all
+            double baseWidth = 320;
+            double baseHeight = 0; // No base height
+            
+            // Size per app - adjusted for larger icons/text
+            double heightPerApp = 35;
+            // Formula: Höhe = (Anzahl × 35)
+            
+            // Calculate final size using the exact formula
+            double finalWidth = baseWidth;
+            double finalHeight = appCount * heightPerApp;
+            
+            // Apply reasonable limits
+            finalWidth = Math.Max(280, Math.Min(600, finalWidth));
+            finalHeight = Math.Max(35, Math.Min(400, finalHeight)); // Min height for at least one app
+            
+            // Apply size
+            Width = finalWidth;
+            Height = finalHeight;
+            
+            // Debug output
+            System.Diagnostics.Debug.WriteLine($"Apps: {appCount}, Window size: {Width}x{Height}");
+        }
+        
+        private void CalculateOptimalSize()
+        {
+            // Force measure to get accurate content size
             Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            Width = Math.Max(300, DesiredSize.Width + 40);
-            Height = Math.Max(150, DesiredSize.Height + 40);
+            UpdateLayout();
+            
+            // Get the actual content size
+            var contentSize = MainPanel.DesiredSize;
+            
+            // Calculate minimum dimensions
+            double minWidth = 300;
+            double minHeight = 150;
+            double maxWidth = 800;  // Increased max width
+            double maxHeight = 700; // Increased max height
+            
+            // Calculate optimal width based on content
+            double optimalWidth = Math.Max(minWidth, contentSize.Width + 60); // More padding
+            optimalWidth = Math.Min(maxWidth, optimalWidth);
+            
+            // Calculate optimal height based on content
+            double optimalHeight = Math.Max(minHeight, contentSize.Height + 60); // More padding
+            optimalHeight = Math.Min(maxHeight, optimalHeight);
+            
+            // Apply the calculated size
+            Width = optimalWidth;
+            Height = optimalHeight;
+            
+            // Ensure window fits on screen
+            EnsureWindowFitsScreen();
+        }
+        
+        private void EnsureWindowFitsScreen()
+        {
+            var screen = System.Windows.Forms.Screen.PrimaryScreen;
+            var workingArea = screen.WorkingArea;
+            
+            // Adjust width if needed
+            if (Width > workingArea.Width)
+            {
+                Width = workingArea.Width - 20;
+            }
+            
+            // Adjust height if needed
+            if (Height > workingArea.Height)
+            {
+                Height = workingArea.Height - 20;
+            }
+            
+            // Center window if it's too large
+            if (Left + Width > workingArea.Right)
+            {
+                Left = workingArea.Left + (workingArea.Width - Width) / 2;
+            }
+            
+            if (Top + Height > workingArea.Bottom)
+            {
+                Top = workingArea.Top + (workingArea.Height - Height) / 2;
+            }
         }
 
         private Border CreateMenuItem(string appPath)
@@ -116,8 +203,8 @@ namespace TaskbarGroupTool.Windows
             {
                 Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
                 CornerRadius = new CornerRadius(4),
-                Margin = new Thickness(2, 2, 2, 2),
-                Padding = new Thickness(8, 4, 8, 4),
+                Margin = new Thickness(0, 0, 0, 0), // No margin
+                Padding = new Thickness(6, 3, 6, 3), // Slightly increased padding
                 Cursor = System.Windows.Input.Cursors.Hand
             };
 
@@ -126,23 +213,24 @@ namespace TaskbarGroupTool.Windows
                 Orientation = System.Windows.Controls.Orientation.Horizontal
             };
 
-            // Add icon
+            // Add icon - 25% larger
             var icon = GetApplicationIcon(appPath);
             var image = new Image
             {
                 Source = icon,
-                Width = 24,
-                Height = 24,
-                Margin = new Thickness(0, 0, 8, 0)
+                Width = 23, // Increased from 18 (18 * 1.25 = 22.5, rounded to 23)
+                Height = 23, // Increased from 18
+                Margin = new Thickness(0, 0, 6, 0) // Slightly increased margin
             };
 
-            // Add text
+            // Add text - 25% larger
             var textBlock = new TextBlock
             {
                 Text = Path.GetFileNameWithoutExtension(appPath),
                 Foreground = Brushes.White,
                 VerticalAlignment = VerticalAlignment.Center,
-                FontSize = 12
+                FontSize = 14, // Increased from 11 (11 * 1.25 = 13.75, rounded to 14)
+                FontWeight = FontWeights.Medium
             };
 
             stackPanel.Children.Add(image);

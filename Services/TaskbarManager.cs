@@ -69,7 +69,9 @@ namespace TaskbarGroupTool.Services
                 // Register application first
                 AppRegistrationService.RegisterApplication();
                 
-                var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                // Get the .exe path instead of .dll
+                var appPath = assemblyLocation.Replace(".dll", ".exe");
                 var shortcutsPath = Path.Combine(Path.GetDirectoryName(appPath), "Shortcuts");
                 
                 if (!Directory.Exists(shortcutsPath))
