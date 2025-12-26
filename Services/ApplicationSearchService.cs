@@ -1,13 +1,19 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace TaskbarGroupTool.Services
 {
     public class ApplicationSearchService
     {
+        private readonly SearchCacheService _cacheService;
+        private readonly SemaphoreSlim _searchSemaphore;
+        
         [DllImport("shell32.dll", SetLastError = true)]
         private static extern IntPtr SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, IntPtr hToken, out IntPtr pszPath);
 
@@ -21,39 +27,80 @@ namespace TaskbarGroupTool.Services
             new Guid("18987B1D-F99B-4283-9A44-9C9B8C022511"), // Videos
         };
 
-        public List<SearchResult> SearchApplications(string searchTerm)
+        public ApplicationSearchService()
         {
-            var results = new List<SearchResult>();
+            _cacheService = new SearchCacheService();
+            _searchSemaphore = new SemaphoreSlim(3, 3); // Limit concurrent searches
+        }
+
+        public async Task<List<SearchResult>> SearchApplicationsAsync(string searchTerm, CancellationToken cancellationToken = default)
+        {
+            return await _cacheService.GetCachedSearchAsync(searchTerm, 
+                () => PerformSearchAsync(searchTerm, cancellationToken));
+        }
+
+        private async Task<List<SearchResult>> PerformSearchAsync(string searchTerm, CancellationToken cancellationToken)
+        {
+            var results = new ConcurrentBag<SearchResult>();
 
             if (string.IsNullOrWhiteSpace(searchTerm))
-                return results;
+                return new List<SearchResult>();
 
             try
             {
-                // Startmenü durchsuchen
-                results.AddRange(SearchStartMenu(searchTerm));
+                // Limit concurrent searches
+                await _searchSemaphore.WaitAsync(cancellationToken);
                 
-                // Desktop durchsuchen
-                results.AddRange(SearchDesktop(searchTerm));
-                
-                // Bekannte Ordner durchsuchen
-                results.AddRange(SearchKnownFolders(searchTerm));
-                
-                // Installierte Programme durchsuchen
-                results.AddRange(SearchInstalledPrograms(searchTerm));
+                var searchTasks = new List<Task>
+                {
+                    // Startmenü durchsuchen
+                    Task.Run(async () => 
+                    {
+                        var startMenuResults = await SearchStartMenuAsync(searchTerm, cancellationToken);
+                        foreach (var result in startMenuResults)
+                            results.Add(result);
+                    }, cancellationToken),
+                    
+                    // Desktop durchsuchen
+                    Task.Run(async () => 
+                    {
+                        var desktopResults = await SearchDesktopAsync(searchTerm, cancellationToken);
+                        foreach (var result in desktopResults)
+                            results.Add(result);
+                    }, cancellationToken),
+                    
+                    // Bekannte Ordner durchsuchen
+                    Task.Run(async () => 
+                    {
+                        var knownFolderResults = await SearchKnownFoldersAsync(searchTerm, cancellationToken);
+                        foreach (var result in knownFolderResults)
+                            results.Add(result);
+                    }, cancellationToken),
+                    
+                    // Installierte Programme durchsuchen
+                    Task.Run(async () => 
+                    {
+                        var programResults = await SearchInstalledProgramsAsync(searchTerm, cancellationToken);
+                        foreach (var result in programResults)
+                            results.Add(result);
+                    }, cancellationToken)
+                };
+
+                // Wait for all searches to complete with timeout
+                await Task.WhenAll(searchTasks).WaitAsync(TimeSpan.FromSeconds(30), cancellationToken);
             }
             catch (Exception ex)
             {
-                // Fehler bei der Suche behandeln
-                Console.WriteLine($"Fehler bei der Suche: {ex.Message}");
+                // Log error but don't fail completely
+                System.Diagnostics.Debug.WriteLine($"Search error: {ex.Message}");
             }
 
             return results.Distinct().Take(50).ToList();
         }
 
-        private List<SearchResult> SearchStartMenu(string searchTerm)
+        private async Task<List<SearchResult>> SearchStartMenuAsync(string searchTerm, CancellationToken cancellationToken)
         {
-            var results = new List<SearchResult>();
+            var results = new ConcurrentBag<SearchResult>();
             var startMenuPaths = new[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs"),
@@ -61,32 +108,35 @@ namespace TaskbarGroupTool.Services
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft\\Windows\\Start Menu\\Programs")
             };
 
-            foreach (var path in startMenuPaths)
+            var searchTasks = startMenuPaths.Select(async path =>
             {
                 if (Directory.Exists(path))
                 {
-                    results.AddRange(SearchDirectory(path, searchTerm, SearchResultType.Shortcut));
+                    var pathResults = await SearchDirectoryAsync(path, searchTerm, SearchResultType.Shortcut, cancellationToken);
+                    foreach (var result in pathResults)
+                        results.Add(result);
                 }
-            }
+            });
 
-            return results;
+            await Task.WhenAll(searchTasks);
+            return results.ToList();
         }
 
-        private List<SearchResult> SearchDesktop(string searchTerm)
+        private async Task<List<SearchResult>> SearchDesktopAsync(string searchTerm, CancellationToken cancellationToken)
         {
             var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             if (Directory.Exists(desktopPath))
             {
-                return SearchDirectory(desktopPath, searchTerm, SearchResultType.Shortcut);
+                return await SearchDirectoryAsync(desktopPath, searchTerm, SearchResultType.Shortcut, cancellationToken);
             }
             return new List<SearchResult>();
         }
 
-        private List<SearchResult> SearchKnownFolders(string searchTerm)
+        private async Task<List<SearchResult>> SearchKnownFoldersAsync(string searchTerm, CancellationToken cancellationToken)
         {
-            var results = new List<SearchResult>();
+            var results = new ConcurrentBag<SearchResult>();
             
-            foreach (var folderGuid in KnownFolders)
+            var searchTasks = KnownFolders.Select(async folderGuid =>
             {
                 try
                 {
@@ -98,7 +148,9 @@ namespace TaskbarGroupTool.Services
                         
                         if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
                         {
-                            results.AddRange(SearchDirectory(folderPath, searchTerm, SearchResultType.Folder));
+                            var folderResults = await SearchDirectoryAsync(folderPath, searchTerm, SearchResultType.Folder, cancellationToken);
+                            foreach (var result in folderResults)
+                                results.Add(result);
                         }
                     }
                 }
@@ -106,42 +158,57 @@ namespace TaskbarGroupTool.Services
                 {
                     // Ordner nicht verfügbar, überspringen
                 }
-            }
+            });
 
-            return results;
+            await Task.WhenAll(searchTasks);
+            return results.ToList();
         }
 
-        private List<SearchResult> SearchInstalledPrograms(string searchTerm)
+        private async Task<List<SearchResult>> SearchInstalledProgramsAsync(string searchTerm, CancellationToken cancellationToken)
         {
-            var results = new List<SearchResult>();
+            var results = new ConcurrentBag<SearchResult>();
             var programFiles = new[]
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
             };
 
-            foreach (var programPath in programFiles)
+            var searchTasks = programFiles.Select(async programPath =>
             {
                 if (Directory.Exists(programPath))
                 {
-                    results.AddRange(SearchDirectory(programPath, searchTerm, SearchResultType.Application));
+                    var pathResults = await SearchDirectoryAsync(programPath, searchTerm, SearchResultType.Application, cancellationToken);
+                    foreach (var result in pathResults)
+                        results.Add(result);
                 }
-            }
+            });
 
-            return results;
+            await Task.WhenAll(searchTasks);
+            return results.ToList();
         }
 
-        private List<SearchResult> SearchDirectory(string directory, string searchTerm, SearchResultType defaultType)
+        private async Task<List<SearchResult>> SearchDirectoryAsync(string directory, string searchTerm, SearchResultType defaultType, CancellationToken cancellationToken)
         {
-            var results = new List<SearchResult>();
+            var results = new ConcurrentBag<SearchResult>();
 
             try
             {
-                // Verzeichnisse durchsuchen
-                foreach (var dir in Directory.GetDirectories(directory))
+                // Get directories and files asynchronously
+                var (directories, files) = await Task.Run(() =>
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return (
+                        Directory.GetDirectories(directory),
+                        Directory.GetFiles(directory)
+                    );
+                }, cancellationToken);
+
+                // Process directories in parallel
+                var dirTasks = directories.Select(async dir =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var dirName = Path.GetFileName(dir);
-                    if (dirName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    if (dirName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true)
                     {
                         results.Add(new SearchResult
                         {
@@ -150,15 +217,16 @@ namespace TaskbarGroupTool.Services
                             Type = SearchResultType.Folder
                         });
                     }
-                }
+                });
 
-                // Dateien durchsuchen
-                foreach (var file in Directory.GetFiles(directory))
+                // Process files in parallel
+                var fileTasks = files.Select(async file =>
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var fileName = Path.GetFileNameWithoutExtension(file);
                     var extension = Path.GetExtension(file).ToLower();
 
-                    if (fileName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    if (fileName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true)
                     {
                         var type = defaultType;
                         if (extension == ".exe")
@@ -173,30 +241,45 @@ namespace TaskbarGroupTool.Services
                             Type = type
                         });
                     }
-                }
+                });
 
-                // Rekursive Suche in Unterverzeichnissen (begrenzte Tiefe)
+                // Wait for all file and directory processing to complete
+                await Task.WhenAll(dirTasks.Concat(fileTasks));
+
+                // Limited recursive search only if we haven't found enough results
                 if (results.Count < 20)
                 {
-                    foreach (var dir in Directory.GetDirectories(directory).Take(5))
+                    var subdirSearchTasks = directories.Take(5).Select(async subdir =>
                     {
                         try
                         {
-                            results.AddRange(SearchDirectory(dir, searchTerm, defaultType));
+                            var subResults = await SearchDirectoryAsync(subdir, searchTerm, defaultType, cancellationToken);
+                            foreach (var result in subResults)
+                                results.Add(result);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            throw; // Re-throw cancellation
                         }
                         catch
                         {
-                            // Zugriff verweigert, überspringen
+                            // Access denied, skip silently
                         }
-                    }
+                    });
+
+                    await Task.WhenAll(subdirSearchTasks);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // Re-throw cancellation
             }
             catch
             {
-                // Zugriff verweigert oder anderer Fehler
+                // Access denied or other error, skip silently
             }
 
-            return results;
+            return results.ToList();
         }
 
         public string GetApplicationIcon(string path)

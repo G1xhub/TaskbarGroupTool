@@ -1,46 +1,96 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
+using TaskbarGroupTool.Services;
 
 namespace TaskbarGroupTool.Models
 {
-    public class IconItem
+    public class IconItem : IDisposable
     {
+        private BitmapSource _icon;
+        private bool _disposed = false;
+        private readonly object _iconLock = new object();
+
         public string Name { get; set; }
         public string Path { get; set; }
-        public BitmapImage Icon { get; set; }
+        
+        public BitmapSource Icon
+        {
+            get
+            {
+                if (_disposed)
+                    return null;
+                    
+                lock (_iconLock)
+                {
+                    return _icon;
+                }
+            }
+            private set
+            {
+                lock (_iconLock)
+                {
+                    // Dispose previous icon
+                    if (_icon is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+                    
+                    _icon = value;
+                    
+                    // Freeze for cross-thread access and memory efficiency
+                    if (_icon != null && !_icon.CanFreeze)
+                    {
+                        _icon.Freeze();
+                    }
+                }
+            }
+        }
 
         public IconItem(string name, string path)
         {
             Name = name;
             Path = path;
-            Icon = LoadIcon(path);
+            LoadIconAsync();
         }
 
-        private BitmapImage LoadIcon(string iconPath)
+        private async Task LoadIconAsync()
         {
             try
             {
-                if (File.Exists(iconPath))
+                var icon = await IconCacheService.Instance.GetIconAsync(Path);
+                if (icon != null)
                 {
-                    var bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(iconPath);
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    bitmap.Freeze();
-                    return bitmap;
+                    Icon = icon;
                 }
             }
             catch
             {
-                // Return default icon if loading fails
+                // Failed to load icon, keep it null
             }
-            return null;
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                lock (_iconLock)
+                {
+                    if (_icon is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+                    _icon = null;
+                    _disposed = true;
+                }
+            }
         }
     }
 

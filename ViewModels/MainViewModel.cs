@@ -1,8 +1,13 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Threading;
+using System.Windows;
 using TaskbarGroupTool.Models;
 using TaskbarGroupTool.Services;
 
@@ -15,11 +20,24 @@ namespace TaskbarGroupTool.ViewModels
         private TaskbarGroup selectedGroup;
         private string groupName;
         private string searchTerm;
+        private bool isSearchInProgress;
+        private CancellationTokenSource searchCancellationTokenSource;
+        private System.Timers.Timer searchDebounceTimer;
 
         public ObservableCollection<TaskbarGroup> Groups { get; set; }
         public ObservableCollection<SearchResult> SearchResults { get; set; }
         public ObservableCollection<UsageStatistics> TopApplications { get; set; }
         public ObservableCollection<GroupUsageStatistics> TopGroups { get; set; }
+
+        public bool IsSearchInProgress
+        {
+            get => isSearchInProgress;
+            set
+            {
+                isSearchInProgress = value;
+                OnPropertyChanged();
+            }
+        }
 
         public TaskbarGroup SelectedGroup
         {
@@ -54,14 +72,9 @@ namespace TaskbarGroupTool.ViewModels
                 searchTerm = value;
                 OnPropertyChanged();
                 
-                if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
-                {
-                    PerformSearch();
-                }
-                else
-                {
-                    SearchResults.Clear();
-                }
+                // Debounced search - reset timer
+                searchDebounceTimer?.Stop();
+                searchDebounceTimer?.Start();
             }
         }
 
@@ -73,6 +86,11 @@ namespace TaskbarGroupTool.ViewModels
             SearchResults = new ObservableCollection<SearchResult>();
             TopApplications = new ObservableCollection<UsageStatistics>();
             TopGroups = new ObservableCollection<GroupUsageStatistics>();
+            
+            // Initialize debounce timer for search
+            searchDebounceTimer = new System.Timers.Timer(300); // 300ms delay
+            searchDebounceTimer.Elapsed += SearchDebounceTimer_Elapsed;
+            searchDebounceTimer.AutoReset = false;
             
             LoadGroups();
         }
@@ -96,22 +114,56 @@ namespace TaskbarGroupTool.ViewModels
             }
         }
 
-        private void PerformSearch()
+        private async void SearchDebounceTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            if (string.IsNullOrEmpty(searchTerm) || searchTerm.Length < 3)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    SearchResults.Clear();
+                    IsSearchInProgress = false;
+                });
+                return;
+            }
+
+            await PerformSearchAsync();
+        }
+
+        private async Task PerformSearchAsync()
+        {
+            // Cancel any ongoing search
+            searchCancellationTokenSource?.Cancel();
+            searchCancellationTokenSource?.Dispose();
+            searchCancellationTokenSource = new CancellationTokenSource();
+
             try
             {
-                var results = searchService.SearchApplications(searchTerm);
-                SearchResults.Clear();
+                IsSearchInProgress = true;
                 
-                foreach (var result in results.Take(20))
+                var results = await searchService.SearchApplicationsAsync(searchTerm, searchCancellationTokenSource.Token);
+                
+                // Update UI on main thread
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    SearchResults.Add(result);
-                }
+                    SearchResults.Clear();
+                    
+                    foreach (var result in results.Take(20)) // Virtualize results
+                    {
+                        SearchResults.Add(result);
+                    }
+                });
             }
-            catch (System.Exception ex)
+            catch (OperationCanceledException)
             {
-                System.Windows.MessageBox.Show($"Search error: {ex.Message}", "Error", 
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                // Search was cancelled, ignore
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Search error: {ex.Message}");
+            }
+            finally
+            {
+                IsSearchInProgress = false;
             }
         }
 

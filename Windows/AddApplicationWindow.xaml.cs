@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -28,9 +29,9 @@ namespace TaskbarGroupTool.Windows
             DataContext = this;
         }
 
-        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        private async void SearchButton_Click(object sender, RoutedEventArgs e)
         {
-            PerformSearch();
+            await PerformSearchAsync();
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -74,17 +75,17 @@ namespace TaskbarGroupTool.Windows
         {
             if (e.Key == Key.Enter)
             {
-                PerformSearch();
+                _ = PerformSearchAsync();
             }
         }
 
-        private void PerformSearch()
+        private async Task PerformSearchAsync()
         {
             if (!string.IsNullOrEmpty(SearchTerm) && SearchTerm.Length > 2)
             {
                 try
                 {
-                    var results = searchService.SearchApplications(SearchTerm);
+                    var results = await searchService.SearchApplicationsAsync(SearchTerm);
                     SearchResults.Clear();
                     
                     foreach (var result in results.Take(20))
@@ -102,6 +103,11 @@ namespace TaskbarGroupTool.Windows
             {
                 SearchResults.Clear();
             }
+        }
+
+        private void PerformSearch()
+        {
+            _ = PerformSearchAsync();
         }
 
         private void SearchResultsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)

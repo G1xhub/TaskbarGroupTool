@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -41,8 +42,23 @@ namespace TaskbarGroupTool
             // Bind search results
             SearchResultsListBox.ItemsSource = viewModel.SearchResults;
             
+            // Subscribe to ViewModel property changes
+            viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            
             // Initialize statistics data
             LoadStatisticsData();
+        }
+
+        private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(viewModel.IsSearchInProgress))
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    SearchProgressBar.Visibility = viewModel.IsSearchInProgress ? Visibility.Visible : Visibility.Collapsed;
+                    SearchButton.IsEnabled = !viewModel.IsSearchInProgress;
+                });
+            }
         }
 
         private void LoadStatisticsData()
