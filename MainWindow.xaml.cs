@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Win32;
 using TaskbarGroupTool.ViewModels;
 using TaskbarGroupTool.Services;
@@ -16,10 +19,14 @@ namespace TaskbarGroupTool
     {
         private MainViewModel viewModel;
         private ConfigurationService configService;
+        private StatisticsService statisticsService;
+        private readonly ThemeService themeService;
 
         public MainWindow()
         {
             InitializeComponent();
+            themeService = ThemeService.Instance;
+            InitializeTheme();
             InitializeViewModel();
             SetupEventHandlers();
         }
@@ -28,10 +35,32 @@ namespace TaskbarGroupTool
         {
             viewModel = new MainViewModel();
             configService = new ConfigurationService();
+            statisticsService = new StatisticsService();
             DataContext = viewModel;
             
             // Bind search results
             SearchResultsListBox.ItemsSource = viewModel.SearchResults;
+            
+            // Initialize statistics data
+            LoadStatisticsData();
+        }
+
+        private void LoadStatisticsData()
+        {
+            try
+            {
+                var topApps = statisticsService.GetTopApplications(10);
+                var topGroups = statisticsService.GetTopGroups(5);
+                
+                // Create observable collections for binding
+                viewModel.TopApplications = new ObservableCollection<UsageStatistics>(topApps);
+                viewModel.TopGroups = new ObservableCollection<GroupUsageStatistics>(topGroups);
+            }
+            catch (Exception ex)
+            {
+                // Silently handle statistics loading errors
+                System.Diagnostics.Debug.WriteLine($"Error loading statistics: {ex.Message}");
+            }
         }
 
         private void SetupEventHandlers()
@@ -49,8 +78,16 @@ namespace TaskbarGroupTool
             MoveDownButton.Click += MoveDownButton_Click;
             ExportButton.Click += ExportButton_Click;
             ImportButton.Click += ImportButton_Click;
+            StatisticsButton.Click += StatisticsButton_Click;
             BackupButton.Click += BackupButton_Click;
             RestoreButton.Click += RestoreButton_Click;
+            
+            // Statistics buttons
+            RefreshStatsButton.Click += RefreshStatsButton_Click;
+            DetailedStatsButton.Click += DetailedStatsButton_Click;
+            
+            // Theme toggle
+            ThemeToggleButton.Click += ThemeToggleButton_Click;
             
             // Load preset icons
             IconComboBox.ItemsSource = IconManager.LoadPresetIcons();
@@ -130,9 +167,23 @@ namespace TaskbarGroupTool
 
         private void CreateShortcutButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedIcon = IconComboBox.SelectedItem as IconItem;
-            string iconPath = selectedIcon?.Path;
-            viewModel.CreateTaskbarShortcut(iconPath);
+            if (viewModel.SelectedGroup != null && viewModel.SelectedGroup.Applications.Any())
+            {
+                var selectedIcon = IconComboBox.SelectedItem as IconItem;
+                string iconPath = selectedIcon?.Path;
+                viewModel.CreateTaskbarShortcut(iconPath);
+                
+                // Record statistics
+                statisticsService.RecordGroupLaunch(viewModel.SelectedGroup.Name);
+                
+                MessageBox.Show($"Taskbar shortcut created for group '{viewModel.SelectedGroup.Name}'!", 
+                    "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Please select a group with at least one application.", 
+                    "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void BrowseIconButton_Click(object sender, RoutedEventArgs e)
@@ -387,6 +438,105 @@ namespace TaskbarGroupTool
                 MessageBox.Show($"Successfully restored {restoredGroups.Count} groups from backup!", 
                     "Restore Successful", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+        }
+
+        private void StatisticsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var statsWindow = new StatisticsWindow();
+            statsWindow.Owner = this;
+            statsWindow.ShowDialog();
+        }
+
+        private void RefreshStatsButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoadStatisticsData();
+        }
+
+        private void DetailedStatsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var statsWindow = new StatisticsWindow();
+            statsWindow.Owner = this;
+            statsWindow.ShowDialog();
+        }
+
+        private void InitializeTheme()
+        {
+            try
+            {
+                themeService.LoadThemePreference();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading theme preference: {ex.Message}");
+            }
+
+            ApplyTheme(themeService.IsDarkMode);
+            themeService.PropertyChanged += ThemeService_PropertyChanged;
+        }
+
+        private void ThemeService_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ThemeService.IsDarkMode))
+            {
+                ApplyTheme(themeService.IsDarkMode);
+            }
+        }
+
+        private void ApplyTheme(bool isDarkMode)
+        {
+            if (isDarkMode)
+            {
+                Resources["PrimaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
+                Resources["SecondaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#374151"));
+                Resources["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#374151"));
+                Resources["BorderBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4B5563"));
+                Resources["TextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+                Resources["TextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D1D5DB"));
+                Resources["AccentColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#818CF8"));
+                Resources["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+                Resources["HeaderText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+            }
+            else
+            {
+                Resources["PrimaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8F9FA"));
+                Resources["SecondaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+                Resources["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+                Resources["BorderBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E5E7EB"));
+                Resources["TextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
+                Resources["TextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280"));
+                Resources["AccentColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6366F1"));
+                Resources["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
+                Resources["HeaderText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+            }
+
+            Background = (Brush)Resources["PrimaryBackground"];
+            UpdateThemeToggleContent(isDarkMode);
+        }
+
+        private void UpdateThemeToggleContent(bool isDarkMode)
+        {
+            if (ThemeToggleButton != null)
+            {
+                ThemeToggleButton.Content = isDarkMode ? "Light Mode" : "Dark Mode";
+
+                if (isDarkMode)
+                {
+                    // Light pill with dark text for good contrast on dark header
+                    ThemeToggleButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E5E7EB"));
+                    ThemeToggleButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+                }
+                else
+                {
+                    // Dark pill with light text for contrast on light header
+                    ThemeToggleButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+                    ThemeToggleButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+                }
+            }
+        }
+
+        private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            themeService.ToggleTheme();
         }
     }
 }

@@ -18,6 +18,8 @@ namespace TaskbarGroupTool.ViewModels
 
         public ObservableCollection<TaskbarGroup> Groups { get; set; }
         public ObservableCollection<SearchResult> SearchResults { get; set; }
+        public ObservableCollection<UsageStatistics> TopApplications { get; set; }
+        public ObservableCollection<GroupUsageStatistics> TopGroups { get; set; }
 
         public TaskbarGroup SelectedGroup
         {
@@ -69,6 +71,9 @@ namespace TaskbarGroupTool.ViewModels
             searchService = new ApplicationSearchService();
             Groups = new ObservableCollection<TaskbarGroup>();
             SearchResults = new ObservableCollection<SearchResult>();
+            TopApplications = new ObservableCollection<UsageStatistics>();
+            TopGroups = new ObservableCollection<GroupUsageStatistics>();
+            
             LoadGroups();
         }
 
