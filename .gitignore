@@ -360,3 +360,6 @@ shortcuts/
 desktop/
 %APPDATA%/TaskbarGroupTool/
 groups.json
+
+# Warp
+WARP.md
