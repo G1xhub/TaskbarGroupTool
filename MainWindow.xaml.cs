@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,6 +17,7 @@ namespace TaskbarGroupTool
     {
         private MainViewModel viewModel;
         private ConfigurationService configService;
+        private StatisticsService statisticsService;
 
         public MainWindow()
         {
@@ -28,10 +30,32 @@ namespace TaskbarGroupTool
         {
             viewModel = new MainViewModel();
             configService = new ConfigurationService();
+            statisticsService = new StatisticsService();
             DataContext = viewModel;
             
             // Bind search results
             SearchResultsListBox.ItemsSource = viewModel.SearchResults;
+            
+            // Initialize statistics data
+            LoadStatisticsData();
+        }
+
+        private void LoadStatisticsData()
+        {
+            try
+            {
+                var topApps = statisticsService.GetTopApplications(10);
+                var topGroups = statisticsService.GetTopGroups(5);
+                
+                // Create observable collections for binding
+                viewModel.TopApplications = new ObservableCollection<UsageStatistics>(topApps);
+                viewModel.TopGroups = new ObservableCollection<GroupUsageStatistics>(topGroups);
+            }
+            catch (Exception ex)
+            {
+                // Silently handle statistics loading errors
+                System.Diagnostics.Debug.WriteLine($"Error loading statistics: {ex.Message}");
+            }
         }
 
         private void SetupEventHandlers()
@@ -49,8 +73,13 @@ namespace TaskbarGroupTool
             MoveDownButton.Click += MoveDownButton_Click;
             ExportButton.Click += ExportButton_Click;
             ImportButton.Click += ImportButton_Click;
+            StatisticsButton.Click += StatisticsButton_Click;
             BackupButton.Click += BackupButton_Click;
             RestoreButton.Click += RestoreButton_Click;
+            
+            // Statistics buttons
+            RefreshStatsButton.Click += RefreshStatsButton_Click;
+            DetailedStatsButton.Click += DetailedStatsButton_Click;
             
             // Load preset icons
             IconComboBox.ItemsSource = IconManager.LoadPresetIcons();
@@ -130,9 +159,23 @@ namespace TaskbarGroupTool
 
         private void CreateShortcutButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedIcon = IconComboBox.SelectedItem as IconItem;
-            string iconPath = selectedIcon?.Path;
-            viewModel.CreateTaskbarShortcut(iconPath);
+            if (viewModel.SelectedGroup != null && viewModel.SelectedGroup.Applications.Any())
+            {
+                var selectedIcon = IconComboBox.SelectedItem as IconItem;
+                string iconPath = selectedIcon?.Path;
+                viewModel.CreateTaskbarShortcut(iconPath);
+                
+                // Record statistics
+                statisticsService.RecordGroupLaunch(viewModel.SelectedGroup.Name);
+                
+                MessageBox.Show($"Taskbar shortcut created for group '{viewModel.SelectedGroup.Name}'!", 
+                    "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Please select a group with at least one application.", 
+                    "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void BrowseIconButton_Click(object sender, RoutedEventArgs e)
@@ -387,6 +430,25 @@ namespace TaskbarGroupTool
                 MessageBox.Show($"Successfully restored {restoredGroups.Count} groups from backup!", 
                     "Restore Successful", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+        }
+
+        private void StatisticsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var statsWindow = new StatisticsWindow();
+            statsWindow.Owner = this;
+            statsWindow.ShowDialog();
+        }
+
+        private void RefreshStatsButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoadStatisticsData();
+        }
+
+        private void DetailedStatsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var statsWindow = new StatisticsWindow();
+            statsWindow.Owner = this;
+            statsWindow.ShowDialog();
         }
     }
 }

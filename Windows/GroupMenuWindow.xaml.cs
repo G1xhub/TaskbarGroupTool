@@ -19,6 +19,7 @@ namespace TaskbarGroupTool.Windows
     {
         private TaskbarGroup currentGroup;
         private List<UIElement> menuItems = new List<UIElement>();
+        private StatisticsService statisticsService;
         
         // Import for setting AppUserModelID
         [DllImport("shell32.dll", SetLastError = true)]
@@ -27,6 +28,9 @@ namespace TaskbarGroupTool.Windows
         public GroupMenuWindow(string groupName)
         {
             InitializeComponent();
+            
+            // Initialize statistics service
+            statisticsService = new StatisticsService();
             
             // Load the group
             currentGroup = LoadGroup(groupName);
@@ -280,6 +284,11 @@ namespace TaskbarGroupTool.Windows
                     UseShellExecute = true
                 };
                 Process.Start(startInfo);
+                
+                // Record statistics
+                var appName = Path.GetFileNameWithoutExtension(appPath);
+                statisticsService.RecordApplicationLaunch(appPath, appName);
+                statisticsService.RecordGroupLaunch(currentGroup.Name);
                 
                 Close();
             }
