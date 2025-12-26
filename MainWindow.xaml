@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Taskbar Grouping Tool" Height="700" Width="900"
         WindowStartupLocation="CenterScreen"
-        Background="#F8F9FA">
+        Background="{DynamicResource PrimaryBackground}">
     
     <Window.Resources>
         <!-- Light Theme Colors -->
@@ -15,6 +15,7 @@
         <SolidColorBrush x:Key="TextSecondary" Color="#6B7280"/>
         <SolidColorBrush x:Key="AccentColor" Color="#6366F1"/>
         <SolidColorBrush x:Key="HeaderBackground" Color="#1F2937"/>
+        <SolidColorBrush x:Key="HeaderText" Color="#FFFFFF"/>
         
         <!-- Dark Theme Colors -->
         <SolidColorBrush x:Key="DarkPrimaryBackground" Color="#1F2937"/>
@@ -82,7 +83,7 @@
         
         <!-- Secondary Button Style -->
         <Style x:Key="SecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="15,8"/>
@@ -98,25 +99,13 @@
                                             VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <!-- Hover: leicht anderes Grau je nach Theme über Resources -->
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ColorAnimation Storyboard.TargetProperty="Background.Color"
-                                                          To="#D1D5DB" Duration="0:0:0.2"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ColorAnimation Storyboard.TargetProperty="Background.Color"
-                                                          To="#E5E7EB" Duration="0:0:0.2"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
+                                <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
                             </Trigger>
+                            <!-- Pressed: etwas dunklerer Hintergrund -->
                             <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
                                 <Setter Property="RenderTransform">
                                     <Setter.Value>
                                         <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
@@ -190,6 +179,76 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Dark ComboBox Style -->
+        <Style x:Key="DarkComboBox" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Displayed selected item -->
+                            <Border x:Name="Border"
+                                    Grid.Column="0"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4">
+                                <ContentPresenter Margin="8,2,8,2"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalAlignment="Left"
+                                                  Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
+                            </Border>
+
+                            <!-- Drop-down button -->
+                            <ToggleButton x:Name="DropDownToggle"
+                                          Grid.Column="1"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}">
+                                <Grid Width="24" Height="24">
+                                    <Path Stroke="{DynamicResource TextSecondary}"
+                                          StrokeThickness="2"
+                                          Data="M 4 8 L 8 12 L 12 8"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                                </Grid>
+                            </ToggleButton>
+
+                            <!-- Popup list -->
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border Background="{DynamicResource SecondaryBackground}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4">
+                                    <ScrollViewer Margin="0" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     
     <Grid>
@@ -200,15 +259,28 @@
         </Grid.RowDefinitions>
         
         <!-- Header -->
-        <Border Grid.Row="0" Background="#1F2937" Padding="24">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Image Source="icons/logo.ico" Width="32" Height="32" Margin="0,0,16,0"/>
-                <TextBlock Text="Taskbar Grouping Tool" 
-                           FontSize="28" 
-                           FontWeight="SemiBold" 
-                           Foreground="White"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackground}" Padding="24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="icons/logo.ico" Width="32" Height="32" Margin="0,0,16,0"/>
+                    <TextBlock Text="Taskbar Grouping Tool" 
+                               FontSize="28" 
+                               FontWeight="SemiBold" 
+                               Foreground="{DynamicResource HeaderText}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Name="ThemeToggleButton"
+                        Style="{StaticResource SecondaryButton}"
+                        Padding="12,6"
+                        Content="Dark Mode"/>
+            </Grid>
         </Border>
         
         <!-- Main Content -->
@@ -220,15 +292,18 @@
             </Grid.ColumnDefinitions>
             
             <!-- Groups & Search -->
-            <Border Grid.Column="0" Background="White" CornerRadius="12" Margin="0,0,12,0" 
-                    BorderBrush="#E5E7EB" BorderThickness="1">
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,12,0">
                 <StackPanel Margin="20">
-                    <TextBlock Text="Groups" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F2937"/>
-                    <ListBox Name="GroupsListBox" Height="250" BorderThickness="0" Background="#F9FAFB"
+                    <TextBlock Text="Groups" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="{DynamicResource TextPrimary}"/>
+                    <ListBox Name="GroupsListBox" Height="250"
+                             BorderThickness="1"
+                             BorderBrush="{DynamicResource BorderBrush}"
+                             Background="{DynamicResource SecondaryBackground}"
+                             Foreground="{DynamicResource TextPrimary}"
                              ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}"/>
                     
                     <!-- Search Section -->
-                    <TextBlock Text="Search Applications" FontSize="16" FontWeight="Medium" Margin="0,16,0,12" Foreground="#374151"/>
+                    <TextBlock Text="Search Applications" FontSize="16" FontWeight="Medium" Margin="0,16,0,12" Foreground="{DynamicResource TextSecondary}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -238,8 +313,11 @@
                         
                         <TextBox Name="SearchTextBox" Grid.Column="0" Height="40" Padding="12,8"
                                  Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
-                                 KeyUp="SearchTextBox_KeyUp" BorderThickness="1" BorderBrush="#D1D5DB"
-                                 Background="White" FontSize="14"
+                                 KeyUp="SearchTextBox_KeyUp" BorderThickness="1"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 Background="{DynamicResource SecondaryBackground}"
+                                 Foreground="{DynamicResource TextPrimary}"
+                                 FontSize="14"
                                  ToolTip="Suche nach Anwendungen..."/>
                         <Button Name="SearchButton" Grid.Column="1" Content="Search" 
                                 Style="{StaticResource SecondaryButton}"
@@ -251,16 +329,19 @@
                     </Grid>
                     
                     <!-- Search Results -->
-                    <ListBox Name="SearchResultsListBox" Height="200" BorderThickness="1" BorderBrush="#E5E7EB"
-                             Margin="0,12,0,0" Background="White" MouseDoubleClick="SearchResultsListBox_MouseDoubleClick"
+                    <ListBox Name="SearchResultsListBox" Height="200" BorderThickness="1"
+                             BorderBrush="{DynamicResource BorderBrush}"
+                             Margin="0,12,0,0"
+                             Background="{DynamicResource SecondaryBackground}"
+                             Foreground="{DynamicResource TextPrimary}"
+                             MouseDoubleClick="SearchResultsListBox_MouseDoubleClick"
                              DisplayMemberPath="Name"
                              AllowDrop="True" PreviewMouseLeftButtonDown="SearchResultsListBox_PreviewMouseLeftButtonDown"/>
                 </StackPanel>
             </Border>
             
             <!-- Group Details -->
-            <Border Grid.Column="1" Background="white" CornerRadius="12" Margin="6,0" 
-                    BorderBrush="#E5E7EB" BorderThickness="1">
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="6,0">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -270,16 +351,22 @@
                     
                     <!-- Group Details Section -->
                     <StackPanel Grid.Row="0">
-                        <TextBlock Text="Group Details" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F2937"/>
+                        <TextBlock Text="Group Details" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="{DynamicResource TextPrimary}"/>
                         
-                        <TextBlock Text="Group Name:" Margin="0,0,0,8" FontWeight="Medium" Foreground="#374151"/>
+                        <TextBlock Text="Group Name:" Margin="0,0,0,8" FontWeight="Medium" Foreground="{DynamicResource TextSecondary}"/>
                         <TextBox Name="GroupNameTextBox" Text="{Binding GroupName, UpdateSourceTrigger=PropertyChanged}" 
-                                 Margin="0,0,0,16" Height="40" Padding="12,8" BorderThickness="1" BorderBrush="#D1D5DB"
-                                 Background="White" FontSize="14"/>
+                                 Margin="0,0,0,16" Height="40" Padding="12,8" BorderThickness="1"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 Background="{DynamicResource SecondaryBackground}"
+                                 Foreground="{DynamicResource TextPrimary}"
+                                 FontSize="14"/>
                         
-                        <TextBlock Text="Applications:" Margin="0,0,0,8" FontWeight="Medium" Foreground="#374151"/>
-                        <ListBox Name="ApplicationsListBox" Height="180" BorderThickness="1" BorderBrush="#E5E7EB"
-                                 ItemsSource="{Binding SelectedGroup.Applications}" Background="White"
+                        <TextBlock Text="Applications:" Margin="0,0,0,8" FontWeight="Medium" Foreground="{DynamicResource TextSecondary}"/>
+                        <ListBox Name="ApplicationsListBox" Height="180" BorderThickness="1"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 Background="{DynamicResource SecondaryBackground}"
+                                 Foreground="{DynamicResource TextPrimary}"
+                                 ItemsSource="{Binding SelectedGroup.Applications}"
                                  AllowDrop="True" Drop="ApplicationsListBox_Drop" DragOver="ApplicationsListBox_DragOver"/>
                         
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
@@ -296,7 +383,7 @@
                                     Style="{StaticResource DangerButton}" Click="DeleteApplicationButton_Click"/>
                         </StackPanel>
                         
-                        <TextBlock Text="Shortcut Icon:" Margin="0,0,0,8" FontWeight="Medium" Foreground="#374151"/>
+                        <TextBlock Text="Shortcut Icon:" Margin="0,0,0,8" FontWeight="Medium" Foreground="{DynamicResource TextSecondary}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -305,7 +392,7 @@
                             
                             <ComboBox Name="IconComboBox" Grid.Column="0" Height="40" 
                                       SelectedValue="{Binding SelectedIconPath}" SelectedValuePath="Path"
-                                      BorderThickness="1" BorderBrush="#D1D5DB" Background="White" FontSize="14">
+                                      Style="{StaticResource DarkComboBox}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -327,21 +414,25 @@
                                 Style="{StaticResource ModernButton}" Margin="0,0,0,8" Click="CreateShortcutButton_Click"/>
                         
                         <TextBlock Text="Note: After creating the shortcut, right-click on it and select 'Pin to taskbar'" 
-                                   FontSize="12" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                   FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Grid>
             </Border>
             
             <!-- Statistics -->
-            <Border Grid.Column="2" Background="white" CornerRadius="12" Margin="12,0,0,0" 
-                    BorderBrush="#E5E7EB" BorderThickness="1">
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="12,0,0,0">
                 <StackPanel Margin="20">
-                    <TextBlock Text="Statistics" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F2937"/>
+                    <TextBlock Text="Statistics" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="{DynamicResource TextPrimary}"/>
                     
                     <!-- Top Applications -->
-                    <Border Background="#F9FAFB" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                    <Border Background="{DynamicResource SecondaryBackground}"
+                            CornerRadius="8"
+                            Padding="16"
+                            Margin="0,0,0,16"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="Top Applications" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="#374151"/>
+                            <TextBlock Text="Top Applications" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="{DynamicResource TextSecondary}"/>
                             <ItemsControl ItemsSource="{Binding TopApplications}" Height="300">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -350,7 +441,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding ApplicationName}" FontSize="12" Foreground="#1F2937" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="0" Text="{Binding ApplicationName}" FontSize="12" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Grid.Column="1" Text="{Binding LaunchCount, StringFormat={}{0}x}" FontSize="12" FontWeight="Bold" Foreground="#3B82F6" Margin="8,0,0,0"/>
                                         </Grid>
                                     </DataTemplate>
@@ -360,9 +451,14 @@
                     </Border>
                     
                     <!-- Top Groups -->
-                    <Border Background="#F9FAFB" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                    <Border Background="{DynamicResource SecondaryBackground}"
+                            CornerRadius="8"
+                            Padding="16"
+                            Margin="0,0,0,16"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="Top Groups" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="#374151"/>
+                            <TextBlock Text="Top Groups" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="{DynamicResource TextSecondary}"/>
                             <ItemsControl ItemsSource="{Binding TopGroups}" Height="150">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -371,7 +467,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding GroupName}" FontSize="12" Foreground="#1F2937" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="0" Text="{Binding GroupName}" FontSize="12" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Grid.Column="1" Text="{Binding LaunchCount, StringFormat={}{0}x}" FontSize="12" FontWeight="Bold" Foreground="#10B981" Margin="8,0,0,0"/>
                                         </Grid>
                                     </DataTemplate>
@@ -392,7 +488,7 @@
         </Grid>
         
         <!-- Footer -->
-        <Border Grid.Row="2" Background="#F3F4F6" Padding="24">
+        <Border Grid.Row="2" Background="{DynamicResource SecondaryBackground}" Padding="24">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Name="StatisticsButton" Content="Statistics" 
                         Style="{StaticResource SecondaryButton}"

@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Win32;
 using TaskbarGroupTool.ViewModels;
 using TaskbarGroupTool.Services;
@@ -18,10 +20,13 @@ namespace TaskbarGroupTool
         private MainViewModel viewModel;
         private ConfigurationService configService;
         private StatisticsService statisticsService;
+        private readonly ThemeService themeService;
 
         public MainWindow()
         {
             InitializeComponent();
+            themeService = ThemeService.Instance;
+            InitializeTheme();
             InitializeViewModel();
             SetupEventHandlers();
         }
@@ -80,6 +85,9 @@ namespace TaskbarGroupTool
             // Statistics buttons
             RefreshStatsButton.Click += RefreshStatsButton_Click;
             DetailedStatsButton.Click += DetailedStatsButton_Click;
+            
+            // Theme toggle
+            ThemeToggleButton.Click += ThemeToggleButton_Click;
             
             // Load preset icons
             IconComboBox.ItemsSource = IconManager.LoadPresetIcons();
@@ -449,6 +457,86 @@ namespace TaskbarGroupTool
             var statsWindow = new StatisticsWindow();
             statsWindow.Owner = this;
             statsWindow.ShowDialog();
+        }
+
+        private void InitializeTheme()
+        {
+            try
+            {
+                themeService.LoadThemePreference();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading theme preference: {ex.Message}");
+            }
+
+            ApplyTheme(themeService.IsDarkMode);
+            themeService.PropertyChanged += ThemeService_PropertyChanged;
+        }
+
+        private void ThemeService_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ThemeService.IsDarkMode))
+            {
+                ApplyTheme(themeService.IsDarkMode);
+            }
+        }
+
+        private void ApplyTheme(bool isDarkMode)
+        {
+            if (isDarkMode)
+            {
+                Resources["PrimaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
+                Resources["SecondaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#374151"));
+                Resources["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#374151"));
+                Resources["BorderBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4B5563"));
+                Resources["TextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+                Resources["TextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D1D5DB"));
+                Resources["AccentColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#818CF8"));
+                Resources["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+                Resources["HeaderText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+            }
+            else
+            {
+                Resources["PrimaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8F9FA"));
+                Resources["SecondaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+                Resources["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+                Resources["BorderBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E5E7EB"));
+                Resources["TextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
+                Resources["TextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280"));
+                Resources["AccentColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6366F1"));
+                Resources["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
+                Resources["HeaderText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+            }
+
+            Background = (Brush)Resources["PrimaryBackground"];
+            UpdateThemeToggleContent(isDarkMode);
+        }
+
+        private void UpdateThemeToggleContent(bool isDarkMode)
+        {
+            if (ThemeToggleButton != null)
+            {
+                ThemeToggleButton.Content = isDarkMode ? "Light Mode" : "Dark Mode";
+
+                if (isDarkMode)
+                {
+                    // Light pill with dark text for good contrast on dark header
+                    ThemeToggleButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E5E7EB"));
+                    ThemeToggleButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+                }
+                else
+                {
+                    // Dark pill with light text for contrast on light header
+                    ThemeToggleButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+                    ThemeToggleButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+                }
+            }
+        }
+
+        private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            themeService.ToggleTheme();
         }
     }
 }
