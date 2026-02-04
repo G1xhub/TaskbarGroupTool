@@ -7,8 +7,8 @@
         Background="Transparent"
         ShowInTaskbar="False"
         Topmost="True">
-    
-    <Border Name="MainBorder" CornerRadius="8" Background="#2C3E50" Padding="10">
+
+    <Border Name="MainBorder" Background="#1E1E28" BorderBrush="#2E2E3A" BorderThickness="1" Padding="4,6">
         <StackPanel Name="MainPanel" Orientation="Vertical">
             <!-- Items will be added dynamically -->
         </StackPanel>

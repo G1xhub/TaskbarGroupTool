@@ -1,192 +1,190 @@
 <Window x:Class="TaskbarGroupTool.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Taskbar Grouping Tool" Height="700" Width="900"
+        Title="Taskbar Grouping Tool" Height="750" Width="1050"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource PrimaryBackground}">
-    
+        Background="{DynamicResource PrimaryBackground}"
+        FontFamily="Segoe UI">
+
     <Window.Resources>
-        <!-- Light Theme Colors -->
-        <SolidColorBrush x:Key="PrimaryBackground" Color="#F8F9FA"/>
-        <SolidColorBrush x:Key="SecondaryBackground" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="CardBackground" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="BorderBrush" Color="#E5E7EB"/>
-        <SolidColorBrush x:Key="TextPrimary" Color="#1F2937"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#6B7280"/>
-        <SolidColorBrush x:Key="AccentColor" Color="#6366F1"/>
-        <SolidColorBrush x:Key="HeaderBackground" Color="#1F2937"/>
-        <SolidColorBrush x:Key="HeaderText" Color="#FFFFFF"/>
-        
-        <!-- Dark Theme Colors -->
-        <SolidColorBrush x:Key="DarkPrimaryBackground" Color="#1F2937"/>
-        <SolidColorBrush x:Key="DarkSecondaryBackground" Color="#374151"/>
-        <SolidColorBrush x:Key="DarkCardBackground" Color="#374151"/>
-        <SolidColorBrush x:Key="DarkBorderBrush" Color="#4B5563"/>
-        <SolidColorBrush x:Key="DarkTextPrimary" Color="#F9FAFB"/>
-        <SolidColorBrush x:Key="DarkTextSecondary" Color="#D1D5DB"/>
-        <SolidColorBrush x:Key="DarkAccentColor" Color="#818CF8"/>
-        <SolidColorBrush x:Key="DarkHeaderBackground" Color="#111827"/>
-        
-        <!-- Modern Button Style -->
-        <Style x:Key="ModernButton" TargetType="Button">
+        <!-- Light Theme Colors (warm industrial) -->
+        <SolidColorBrush x:Key="PrimaryBackground" Color="#EDEBE6"/>
+        <SolidColorBrush x:Key="SecondaryBackground" Color="#E3E0D9"/>
+        <SolidColorBrush x:Key="CardBackground" Color="#F5F3EF"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#C8C4BC"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#2A2A2A"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#6B6860"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#8B7D6B"/>
+        <SolidColorBrush x:Key="HeaderBackground" Color="#2A2A2A"/>
+        <SolidColorBrush x:Key="HeaderText" Color="#E8E6E1"/>
+        <SolidColorBrush x:Key="InputBackground" Color="#F9F8F5"/>
+        <SolidColorBrush x:Key="StatusBackground" Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="StatusText" Color="#7CB87C"/>
+        <SolidColorBrush x:Key="ActionButtonBg" Color="#3A3A3A"/>
+        <SolidColorBrush x:Key="ActionButtonText" Color="#C8C4BC"/>
+        <SolidColorBrush x:Key="ActiveTabBg" Color="#8B7D6B"/>
+        <SolidColorBrush x:Key="ActiveTabText" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="InactiveTabText" Color="#8A8780"/>
+        <SolidColorBrush x:Key="ListItemHover" Color="#DDD9D0"/>
+        <SolidColorBrush x:Key="ListItemSelected" Color="#C8C0B4"/>
+        <SolidColorBrush x:Key="DangerColor" Color="#A04040"/>
+        <SolidColorBrush x:Key="DangerHover" Color="#8A3535"/>
+        <SolidColorBrush x:Key="SuccessColor" Color="#4A7C59"/>
+
+        <!-- Dark Theme Colors (stored but not active by default) -->
+        <SolidColorBrush x:Key="DarkPrimaryBackground" Color="#141419"/>
+        <SolidColorBrush x:Key="DarkSecondaryBackground" Color="#1C1C24"/>
+        <SolidColorBrush x:Key="DarkCardBackground" Color="#1E1E28"/>
+        <SolidColorBrush x:Key="DarkBorderBrush" Color="#2E2E3A"/>
+        <SolidColorBrush x:Key="DarkTextPrimary" Color="#D4D2CC"/>
+        <SolidColorBrush x:Key="DarkTextSecondary" Color="#7A7872"/>
+        <SolidColorBrush x:Key="DarkAccentColor" Color="#8B7D6B"/>
+        <SolidColorBrush x:Key="DarkHeaderBackground" Color="#0E0E12"/>
+
+        <!-- Flat Button Style -->
+        <Style x:Key="FlatButton" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource AccentColor}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="15,8"/>
-            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Padding" Value="16,7"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="12" 
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
                                 Padding="{TemplateBinding Padding}"
                                 BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="1">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" Opacity="0.1" BlurRadius="8" ShadowDepth="2"/>
-                            </Border.Effect>
-                            <ContentPresenter HorizontalAlignment="Center" 
+                            <ContentPresenter HorizontalAlignment="Center"
                                             VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ColorAnimation Storyboard.TargetProperty="Background.Color"
-                                                          To="#4F46E5" Duration="0:0:0.2"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ColorAnimation Storyboard.TargetProperty="Background.Color"
-                                                          To="#6366F1" Duration="0:0:0.2"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
+                                <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="RenderTransform">
-                                    <Setter.Value>
-                                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
-                                    </Setter.Value>
-                                </Setter>
+                                <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.4"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <!-- Secondary Button Style -->
-        <Style x:Key="SecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="15,8"/>
-            <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="12" 
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" 
-                                            VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <!-- Hover: leicht anderes Grau je nach Theme über Resources -->
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
-                            </Trigger>
-                            <!-- Pressed: etwas dunklerer Hintergrund -->
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
-                                <Setter Property="RenderTransform">
-                                    <Setter.Value>
-                                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <!-- Danger Button Style -->
-        <Style x:Key="DangerButton" TargetType="Button">
-            <Setter Property="Background" Value="#EF4444"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="12" 
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" 
-                                            VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ColorAnimation Storyboard.TargetProperty="Background.Color"
-                                                          To="#DC2626" Duration="0:0:0.2"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ColorAnimation Storyboard.TargetProperty="Background.Color"
-                                                          To="#EF4444" Duration="0:0:0.2"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="RenderTransform">
-                                    <Setter.Value>
-                                        <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <!-- Card Style -->
-        <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="16"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#000000" Opacity="0.08" BlurRadius="12" ShadowDepth="4"/>
                 </Setter.Value>
             </Setter>
         </Style>
 
-        <!-- Dark ComboBox Style -->
+        <!-- Secondary Button Style -->
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource ListItemHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource ListItemSelected}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Danger Button Style -->
+        <Style x:Key="DangerButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource DangerColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource DangerHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Action Button (large, for bottom right) -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource ActionButtonBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ActionButtonText}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="30,14"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentColor}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Compact ComboBox Style -->
         <Style x:Key="DarkComboBox" TargetType="ComboBox">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
-            <Setter Property="Background" Value="{DynamicResource SecondaryBackground}"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
@@ -195,51 +193,32 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-
-                            <!-- Displayed selected item -->
-                            <Border x:Name="Border"
-                                    Grid.Column="0"
+                            <Border x:Name="Border" Grid.ColumnSpan="2"
                                     Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="4">
-                                <ContentPresenter Margin="8,2,8,2"
+                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter Margin="8,4"
                                                   VerticalAlignment="Center"
                                                   HorizontalAlignment="Left"
                                                   Content="{TemplateBinding SelectionBoxItem}"
                                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
                             </Border>
-
-                            <!-- Drop-down button -->
-                            <ToggleButton x:Name="DropDownToggle"
-                                          Grid.Column="1"
+                            <ToggleButton x:Name="DropDownToggle" Grid.Column="1"
                                           Focusable="False"
                                           IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                                           ClickMode="Press"
-                                          Background="{TemplateBinding Background}"
-                                          BorderBrush="{TemplateBinding BorderBrush}"
-                                          BorderThickness="{TemplateBinding BorderThickness}">
-                                <Grid Width="24" Height="24">
-                                    <Path Stroke="{DynamicResource TextSecondary}"
-                                          StrokeThickness="2"
-                                          Data="M 4 8 L 8 12 L 12 8"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"/>
-                                </Grid>
+                                          Background="Transparent" BorderThickness="0">
+                                <Path Stroke="{DynamicResource TextSecondary}" StrokeThickness="1.5"
+                                      Data="M 3 5 L 7 9 L 11 5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      Width="14" Height="14"/>
                             </ToggleButton>
-
-                            <!-- Popup list -->
-                            <Popup x:Name="PART_Popup"
-                                   Placement="Bottom"
+                            <Popup x:Name="PART_Popup" Placement="Bottom"
                                    IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   AllowsTransparency="True"
-                                   Focusable="False"
-                                   PopupAnimation="Slide">
-                                <Border Background="{DynamicResource SecondaryBackground}"
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                                <Border Background="{DynamicResource CardBackground}"
                                         BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="4">
-                                    <ScrollViewer Margin="0" SnapsToDevicePixels="True">
+                                        BorderThickness="1" MaxHeight="200">
+                                    <ScrollViewer SnapsToDevicePixels="True">
                                         <StackPanel IsItemsHost="True"/>
                                     </ScrollViewer>
                                 </Border>
@@ -249,271 +228,331 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Section Header TextBlock -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- Field Label -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+
+        <!-- Card Border -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Themed TextBox -->
+        <Style x:Key="ThemedTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+
+        <!-- Themed ListBox -->
+        <Style x:Key="ThemedListBox" TargetType="ListBox">
+            <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- Modern Button (alias for FlatButton, used in code-behind references) -->
+        <Style x:Key="ModernButton" TargetType="Button" BasedOn="{StaticResource FlatButton}"/>
+
     </Window.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource HeaderBackground}" Padding="24">
+
+        <!-- ═══════════════ HEADER BAR ═══════════════ -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackground}" Padding="20,12">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- App Title -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Image Source="icons/logo.ico" Width="32" Height="32" Margin="0,0,16,0"/>
-                    <TextBlock Text="Taskbar Grouping Tool" 
-                               FontSize="28" 
-                               FontWeight="SemiBold" 
-                               Foreground="{DynamicResource HeaderText}"
-                               VerticalAlignment="Center"/>
+                    <Image Source="icons/logo.ico" Width="22" Height="22" Margin="0,0,10,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="TASKBAR_GROUP"
+                               FontFamily="Consolas" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource HeaderText}" VerticalAlignment="Center"/>
+                    <TextBlock Text="  v1.0"
+                               FontFamily="Consolas" FontSize="10"
+                               Foreground="{DynamicResource InactiveTabText}" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
                 </StackPanel>
 
-                <Button Grid.Column="1"
-                        Name="ThemeToggleButton"
+                <!-- Theme Toggle -->
+                <Button Grid.Column="2" Name="ThemeToggleButton"
                         Style="{StaticResource SecondaryButton}"
-                        Padding="12,6"
-                        Content="Dark Mode"/>
+                        Padding="10,5" FontSize="11" Content="/dark"/>
             </Grid>
         </Border>
-        
-        <!-- Main Content -->
-        <Grid Grid.Row="1" Margin="20">
+
+        <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+        <Grid Grid.Row="1" Margin="12">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="1.1*"/>
+                <ColumnDefinition Width="0.9*"/>
             </Grid.ColumnDefinitions>
-            
-            <!-- Groups & Search -->
-            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,12,0">
-                <StackPanel Margin="20">
-                    <TextBlock Text="Groups" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="{DynamicResource TextPrimary}"/>
-                    <ListBox Name="GroupsListBox" Height="250"
-                             BorderThickness="1"
-                             BorderBrush="{DynamicResource BorderBrush}"
-                             Background="{DynamicResource SecondaryBackground}"
-                             Foreground="{DynamicResource TextPrimary}"
-                             ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}"/>
-                    
-                    <!-- Search Section -->
-                    <TextBlock Text="Search Applications" FontSize="16" FontWeight="Medium" Margin="0,16,0,12" Foreground="{DynamicResource TextSecondary}"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        
-                        <TextBox Name="SearchTextBox" Grid.Column="0" Height="40" Padding="12,8"
-                                 Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
-                                 KeyUp="SearchTextBox_KeyUp" BorderThickness="1"
-                                 BorderBrush="{DynamicResource BorderBrush}"
-                                 Background="{DynamicResource SecondaryBackground}"
-                                 Foreground="{DynamicResource TextPrimary}"
-                                 FontSize="14"
-                                 ToolTip="Suche nach Anwendungen..."/>
-                        <Button Name="SearchButton" Grid.Column="1" Content="Search" 
-                                Style="{StaticResource SecondaryButton}"
-                                Margin="8,0,8,0" Click="SearchButton_Click"
-                                ToolTip="Suche starten"/>
-                        <Button Name="BrowseButton" Grid.Column="2" Content="Browse" 
-                                Style="{StaticResource SecondaryButton}" Click="BrowseButton_Click"
-                                ToolTip="Dateien durchsuchen"/>
-                    </Grid>
-                    
-                    <!-- Search Results -->
-                    <ListBox Name="SearchResultsListBox" Height="200" BorderThickness="1"
-                             BorderBrush="{DynamicResource BorderBrush}"
-                             Margin="0,12,0,0"
-                             Background="{DynamicResource SecondaryBackground}"
-                             Foreground="{DynamicResource TextPrimary}"
-                             MouseDoubleClick="SearchResultsListBox_MouseDoubleClick"
-                             DisplayMemberPath="Name"
-                             AllowDrop="True" PreviewMouseLeftButtonDown="SearchResultsListBox_PreviewMouseLeftButtonDown"/>
-                </StackPanel>
-            </Border>
-            
-            <!-- Group Details -->
-            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="6,0">
-                <Grid Margin="20">
+
+            <!-- ══════ LEFT PANEL: Groups + Search ══════ -->
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,6,0">
+                <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    
-                    <!-- Group Details Section -->
-                    <StackPanel Grid.Row="0">
-                        <TextBlock Text="Group Details" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="{DynamicResource TextPrimary}"/>
-                        
-                        <TextBlock Text="Group Name:" Margin="0,0,0,8" FontWeight="Medium" Foreground="{DynamicResource TextSecondary}"/>
-                        <TextBox Name="GroupNameTextBox" Text="{Binding GroupName, UpdateSourceTrigger=PropertyChanged}" 
-                                 Margin="0,0,0,16" Height="40" Padding="12,8" BorderThickness="1"
-                                 BorderBrush="{DynamicResource BorderBrush}"
-                                 Background="{DynamicResource SecondaryBackground}"
-                                 Foreground="{DynamicResource TextPrimary}"
-                                 FontSize="14"/>
-                        
-                        <TextBlock Text="Applications:" Margin="0,0,0,8" FontWeight="Medium" Foreground="{DynamicResource TextSecondary}"/>
-                        <ListBox Name="ApplicationsListBox" Height="180" BorderThickness="1"
-                                 BorderBrush="{DynamicResource BorderBrush}"
-                                 Background="{DynamicResource SecondaryBackground}"
-                                 Foreground="{DynamicResource TextPrimary}"
-                                 ItemsSource="{Binding SelectedGroup.Applications}"
-                                 AllowDrop="True" Drop="ApplicationsListBox_Drop" DragOver="ApplicationsListBox_DragOver"/>
-                        
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
-                            <Button Name="MoveUpButton" Content="↑" 
-                                    Style="{StaticResource SecondaryButton}"
-                                    Margin="0,0,8,0" Width="40" Height="36" Click="MoveUpButton_Click"/>
-                            <Button Name="MoveDownButton" Content="↓" 
-                                    Style="{StaticResource SecondaryButton}"
-                                    Margin="0,0,8,0" Width="40" Height="36" Click="MoveDownButton_Click"/>
-                            <Button Name="AddApplicationButton" Content="Add" 
-                                    Style="{StaticResource ModernButton}"
-                                    Margin="0,0,8,0" Click="AddApplicationButton_Click"/>
-                            <Button Name="DeleteApplicationButton" Content="Remove" 
-                                    Style="{StaticResource DangerButton}" Click="DeleteApplicationButton_Click"/>
+
+                    <!-- Section Header -->
+                    <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="14,10">
+                        <TextBlock Text="[ GROUPS ]" Style="{StaticResource SectionHeader}" Margin="0"/>
+                    </Border>
+
+                    <!-- Groups List -->
+                    <ListBox Grid.Row="1" Name="GroupsListBox"
+                             Style="{StaticResource ThemedListBox}"
+                             BorderThickness="0"
+                             Margin="0"
+                             ItemsSource="{Binding Groups}"
+                             SelectedItem="{Binding SelectedGroup}"/>
+
+                    <!-- Group Actions -->
+                    <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="10,8">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Button Name="NewGroupButton" Content="+ NEW"
+                                    Style="{StaticResource FlatButton}" Margin="0,0,6,0"/>
+                            <Button Name="SaveGroupButton" Content="SAVE"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                            <Button Name="DeleteGroupButton" Content="DELETE"
+                                    Style="{StaticResource DangerButton}"/>
                         </StackPanel>
-                        
-                        <TextBlock Text="Shortcut Icon:" Margin="0,0,0,8" FontWeight="Medium" Foreground="{DynamicResource TextSecondary}"/>
-                        <Grid>
+                    </Border>
+
+                    <!-- Search Section -->
+                    <Border Grid.Row="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="14,10">
+                        <TextBlock Text="[ SEARCH APPLICATIONS ]" Style="{StaticResource SectionHeader}" Margin="0"/>
+                    </Border>
+
+                    <Grid Grid.Row="4" Margin="10,0,10,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="140"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            
-                            <ComboBox Name="IconComboBox" Grid.Column="0" Height="40" 
-                                      SelectedValue="{Binding SelectedIconPath}" SelectedValuePath="Path"
-                                      Style="{StaticResource DarkComboBox}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Image Source="{Binding Icon}" Width="16" Height="16" Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding Name}"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <Button Name="BrowseIconButton" Grid.Column="1" Content="..." 
-                                    Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Width="40"
-                                    Click="BrowseIconButton_Click"/>
+
+                            <TextBox Name="SearchTextBox" Grid.Column="0"
+                                     Style="{StaticResource ThemedTextBox}"
+                                     Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                     KeyUp="SearchTextBox_KeyUp"
+                                     ToolTip="Search applications..."/>
+                            <Button Name="SearchButton" Grid.Column="1" Content="FIND"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Margin="4,0,4,0" Click="SearchButton_Click"/>
+                            <Button Name="BrowseButton" Grid.Column="2" Content="BROWSE..."
+                                    Style="{StaticResource SecondaryButton}" Click="BrowseButton_Click"/>
                         </Grid>
-                    </StackPanel>
-                    
-                    <!-- Action Buttons -->
-                    <StackPanel Grid.Row="2">
-                        <Button Name="CreateShortcutButton" Content="Create Taskbar Shortcut" 
-                                Style="{StaticResource ModernButton}" Margin="0,0,0,8" Click="CreateShortcutButton_Click"/>
-                        
-                        <TextBlock Text="Note: After creating the shortcut, right-click on it and select 'Pin to taskbar'" 
-                                   FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"/>
-                    </StackPanel>
+
+                        <ListBox Grid.Row="1" Name="SearchResultsListBox"
+                                 Style="{StaticResource ThemedListBox}"
+                                 MouseDoubleClick="SearchResultsListBox_MouseDoubleClick"
+                                 DisplayMemberPath="Name"
+                                 AllowDrop="True"
+                                 PreviewMouseLeftButtonDown="SearchResultsListBox_PreviewMouseLeftButtonDown"/>
+                    </Grid>
                 </Grid>
             </Border>
-            
-            <!-- Statistics -->
-            <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="12,0,0,0">
-                <StackPanel Margin="20">
-                    <TextBlock Text="Statistics" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="{DynamicResource TextPrimary}"/>
-                    
-                    <!-- Top Applications -->
-                    <Border Background="{DynamicResource SecondaryBackground}"
-                            CornerRadius="8"
-                            Padding="16"
-                            Margin="0,0,0,16"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="Top Applications" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="{DynamicResource TextSecondary}"/>
-                            <ItemsControl ItemsSource="{Binding TopApplications}" Height="300">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,4">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding ApplicationName}" FontSize="12" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding LaunchCount, StringFormat={}{0}x}" FontSize="12" FontWeight="Bold" Foreground="#3B82F6" Margin="8,0,0,0"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
+
+            <!-- ══════ RIGHT PANEL: Group Details + Config ══════ -->
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="6,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Section Header -->
+                    <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="14,10">
+                        <TextBlock Text="[ CONFIGURATION ]" Style="{StaticResource SectionHeader}" Margin="0"/>
                     </Border>
-                    
-                    <!-- Top Groups -->
-                    <Border Background="{DynamicResource SecondaryBackground}"
-                            CornerRadius="8"
-                            Padding="16"
-                            Margin="0,0,0,16"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="Top Groups" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="{DynamicResource TextSecondary}"/>
-                            <ItemsControl ItemsSource="{Binding TopGroups}" Height="150">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,4">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding GroupName}" FontSize="12" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding LaunchCount, StringFormat={}{0}x}" FontSize="12" FontWeight="Bold" Foreground="#10B981" Margin="8,0,0,0"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="14,12,14,14">
+                            <!-- Group Name -->
+                            <TextBlock Text="GROUP NAME" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Name="GroupNameTextBox"
+                                     Style="{StaticResource ThemedTextBox}"
+                                     Text="{Binding GroupName, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,14"/>
+
+                            <!-- Applications -->
+                            <TextBlock Text="APPLICATIONS" Style="{StaticResource FieldLabel}"/>
+                            <ListBox Name="ApplicationsListBox" Height="180"
+                                     Style="{StaticResource ThemedListBox}"
+                                     ItemsSource="{Binding SelectedGroup.Applications}"
+                                     AllowDrop="True" Drop="ApplicationsListBox_Drop"
+                                     DragOver="ApplicationsListBox_DragOver"
+                                     Margin="0,0,0,6"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <Button Name="MoveUpButton" Content="UP"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Margin="0,0,4,0" Width="50" Click="MoveUpButton_Click"/>
+                                <Button Name="MoveDownButton" Content="DN"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Margin="0,0,4,0" Width="50" Click="MoveDownButton_Click"/>
+                                <Button Name="AddApplicationButton" Content="+ ADD"
+                                        Style="{StaticResource FlatButton}"
+                                        Margin="0,0,4,0" Click="AddApplicationButton_Click"/>
+                                <Button Name="DeleteApplicationButton" Content="REMOVE"
+                                        Style="{StaticResource DangerButton}" Click="DeleteApplicationButton_Click"/>
+                            </StackPanel>
+
+                            <!-- Shortcut Icon -->
+                            <TextBlock Text="SHORTCUT ICON" Style="{StaticResource FieldLabel}"/>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox Name="IconComboBox" Grid.Column="0" Height="32"
+                                          SelectedValue="{Binding SelectedIconPath}" SelectedValuePath="Path"
+                                          Style="{StaticResource DarkComboBox}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="{Binding Icon}" Width="16" Height="16" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding Name}" FontFamily="Consolas" FontSize="11"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button Name="BrowseIconButton" Grid.Column="1" Content="..."
+                                        Style="{StaticResource SecondaryButton}" Margin="4,0,0,0" Width="36"
+                                        Click="BrowseIconButton_Click"/>
+                            </Grid>
+
+                            <!-- Create Shortcut -->
+                            <Button Name="CreateShortcutButton"
+                                    Content="> CREATE TASKBAR SHORTCUT"
+                                    Style="{StaticResource ActionButton}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,4,0,10" Click="CreateShortcutButton_Click"/>
+
+                            <TextBlock Text="Right-click the shortcut and select 'Pin to taskbar'"
+                                       FontFamily="Consolas" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                            <!-- Statistics Mini Panel -->
+                            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,4,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="[ QUICK STATS ]" Style="{StaticResource SectionHeader}"/>
+
+                                    <ItemsControl ItemsSource="{Binding TopApplications}" MaxHeight="100">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding ApplicationName}"
+                                                               FontFamily="Consolas" FontSize="10"
+                                                               Foreground="{DynamicResource TextPrimary}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding LaunchCount, StringFormat={}{0}x}"
+                                                               FontFamily="Consolas" FontSize="10" FontWeight="Bold"
+                                                               Foreground="{DynamicResource SuccessColor}"
+                                                               Margin="8,0,0,0"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
-                    </Border>
-                    
-                    <!-- Statistics Actions -->
-                    <StackPanel>
-                        <Button Name="RefreshStatsButton" Content="Refresh Statistics" 
-                                Style="{StaticResource SecondaryButton}" Margin="0,0,0,8" Click="RefreshStatsButton_Click"/>
-                        <Button Name="DetailedStatsButton" Content="Detailed Statistics" 
-                                Style="{StaticResource ModernButton}" Click="DetailedStatsButton_Click"/>
-                    </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════ FOOTER / STATUS BAR ═══════════════ -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Status Log -->
+            <Border Grid.Column="0" Background="{DynamicResource StatusBackground}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0"
+                    Padding="14,10">
+                <StackPanel>
+                    <TextBlock Text="SYSTEM_STATUS" FontFamily="Consolas" FontSize="9"
+                               Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4"/>
+                    <TextBlock Name="StatusText1" Text="> READY"
+                               FontFamily="Consolas" FontSize="11"
+                               Foreground="{DynamicResource StatusText}"/>
+                    <TextBlock Name="StatusText2" Text="> Waiting for input..."
+                               FontFamily="Consolas" FontSize="11"
+                               Foreground="{DynamicResource StatusText}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Footer Actions -->
+            <Border Grid.Column="1" Background="{DynamicResource StatusBackground}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,1,0,0"
+                    Padding="10,8">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Name="StatisticsButton" Content="STATS"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,4,0" Click="StatisticsButton_Click"/>
+                    <Button Name="BackupButton" Content="BACKUP"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,4,0" Click="BackupButton_Click"/>
+                    <Button Name="RestoreButton" Content="RESTORE"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,4,0" Click="RestoreButton_Click"/>
+                    <Button Name="ExportButton" Content="EXPORT"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,4,0" Click="ExportButton_Click"/>
+                    <Button Name="ImportButton" Content="IMPORT"
+                            Style="{StaticResource SecondaryButton}" Click="ImportButton_Click"/>
                 </StackPanel>
             </Border>
         </Grid>
-        
-        <!-- Footer -->
-        <Border Grid.Row="2" Background="{DynamicResource SecondaryBackground}" Padding="24">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Name="StatisticsButton" Content="Statistics" 
-                        Style="{StaticResource SecondaryButton}"
-                        Margin="0,0,12,0" Click="StatisticsButton_Click"/>
-                <Button Name="BackupButton" Content="Backup" 
-                        Style="{StaticResource SecondaryButton}"
-                        Margin="0,0,12,0" Click="BackupButton_Click"/>
-                <Button Name="RestoreButton" Content="Restore" 
-                        Style="{StaticResource SecondaryButton}"
-                        Margin="0,0,12,0" Click="RestoreButton_Click"/>
-                <Button Name="ExportButton" Content="Export" 
-                        Style="{StaticResource SecondaryButton}"
-                        Margin="0,0,12,0" Click="ExportButton_Click"/>
-                <Button Name="ImportButton" Content="Import" 
-                        Style="{StaticResource SecondaryButton}"
-                        Margin="0,0,12,0" Click="ImportButton_Click"/>
-                <Button Name="NewGroupButton" Content="New Group" 
-                        Style="{StaticResource SecondaryButton}"
-                        Margin="0,0,12,0" Click="NewGroupButton_Click"/>
-                <Button Name="SaveGroupButton" Content="Save" 
-                        Style="{StaticResource ModernButton}"
-                        Margin="0,0,12,0" Click="SaveGroupButton_Click"/>
-                <Button Name="DeleteGroupButton" Content="Delete" 
-                        Style="{StaticResource DangerButton}" Click="DeleteGroupButton_Click"/>
-            </StackPanel>
-        </Border>
     </Grid>
 </Window>
