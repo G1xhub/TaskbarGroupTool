@@ -37,12 +37,14 @@ namespace TaskbarGroupTool
             configService = new ConfigurationService();
             statisticsService = new StatisticsService();
             DataContext = viewModel;
-            
+
             // Bind search results
             SearchResultsListBox.ItemsSource = viewModel.SearchResults;
-            
+
             // Initialize statistics data
             LoadStatisticsData();
+
+            UpdateStatusBar("> SYSTEM INITIALIZED...", "> Waiting for input...");
         }
 
         private void LoadStatisticsData()
@@ -51,7 +53,7 @@ namespace TaskbarGroupTool
             {
                 var topApps = statisticsService.GetTopApplications(10);
                 var topGroups = statisticsService.GetTopGroups(5);
-                
+
                 // Create observable collections for binding
                 viewModel.TopApplications = new ObservableCollection<UsageStatistics>(topApps);
                 viewModel.TopGroups = new ObservableCollection<GroupUsageStatistics>(topGroups);
@@ -61,6 +63,12 @@ namespace TaskbarGroupTool
                 // Silently handle statistics loading errors
                 System.Diagnostics.Debug.WriteLine($"Error loading statistics: {ex.Message}");
             }
+        }
+
+        private void UpdateStatusBar(string line1, string line2)
+        {
+            if (StatusText1 != null) StatusText1.Text = line1;
+            if (StatusText2 != null) StatusText2.Text = line2;
         }
 
         private void SetupEventHandlers()
@@ -81,17 +89,13 @@ namespace TaskbarGroupTool
             StatisticsButton.Click += StatisticsButton_Click;
             BackupButton.Click += BackupButton_Click;
             RestoreButton.Click += RestoreButton_Click;
-            
-            // Statistics buttons
-            RefreshStatsButton.Click += RefreshStatsButton_Click;
-            DetailedStatsButton.Click += DetailedStatsButton_Click;
-            
+
             // Theme toggle
             ThemeToggleButton.Click += ThemeToggleButton_Click;
-            
+
             // Load preset icons
             IconComboBox.ItemsSource = IconManager.LoadPresetIcons();
-            
+
             // Setup keyboard shortcuts
             this.KeyDown += MainWindow_KeyDown;
         }
@@ -99,11 +103,13 @@ namespace TaskbarGroupTool
         private void NewGroupButton_Click(object sender, RoutedEventArgs e)
         {
             viewModel.AddNewGroup();
+            UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] New group created", "> Ready");
         }
 
         private void SaveGroupButton_Click(object sender, RoutedEventArgs e)
         {
             viewModel.SaveSelectedGroup();
+            UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Group saved successfully", "> Ready");
             MessageBox.Show("Group saved!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -111,12 +117,14 @@ namespace TaskbarGroupTool
         {
             if (viewModel.SelectedGroup != null)
             {
-                var result = MessageBox.Show($"Are you sure you want to delete the group '{viewModel.SelectedGroup.Name}'?", 
+                var result = MessageBox.Show($"Are you sure you want to delete the group '{viewModel.SelectedGroup.Name}'?",
                     "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                
+
                 if (result == MessageBoxResult.Yes)
                 {
+                    var name = viewModel.SelectedGroup.Name;
                     viewModel.DeleteSelectedGroup();
+                    UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Group '{name}' deleted", "> Ready");
                 }
             }
         }
@@ -128,12 +136,10 @@ namespace TaskbarGroupTool
                 var addWindow = new AddApplicationWindow(viewModel.SelectedGroup);
                 addWindow.Owner = this;
                 addWindow.ShowDialog();
-                
-                // The applications list will update automatically through data binding
             }
             else
             {
-                MessageBox.Show("Please select a group first.", "Warning", 
+                MessageBox.Show("Please select a group first.", "Warning",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -172,16 +178,18 @@ namespace TaskbarGroupTool
                 var selectedIcon = IconComboBox.SelectedItem as IconItem;
                 string iconPath = selectedIcon?.Path;
                 viewModel.CreateTaskbarShortcut(iconPath);
-                
+
                 // Record statistics
                 statisticsService.RecordGroupLaunch(viewModel.SelectedGroup.Name);
-                
-                MessageBox.Show($"Taskbar shortcut created for group '{viewModel.SelectedGroup.Name}'!", 
+
+                UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Shortcut created for '{viewModel.SelectedGroup.Name}'", "> Pin to taskbar via right-click");
+
+                MessageBox.Show($"Taskbar shortcut created for group '{viewModel.SelectedGroup.Name}'!",
                     "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
-                MessageBox.Show("Please select a group with at least one application.", 
+                MessageBox.Show("Please select a group with at least one application.",
                     "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -205,6 +213,7 @@ namespace TaskbarGroupTool
         private void SearchButton_Click(object sender, RoutedEventArgs e)
         {
             viewModel.SearchTerm = SearchTextBox.Text;
+            UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Searching for '{SearchTextBox.Text}'...", "> Results updated");
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -225,8 +234,9 @@ namespace TaskbarGroupTool
                         viewModel.AddApplicationToGroup(fileName);
                     }
                 }
-                
-                MessageBox.Show($"Added {openFileDialog.FileNames.Length} file(s) to the group.", 
+
+                UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Added {openFileDialog.FileNames.Length} file(s)", "> Ready");
+                MessageBox.Show($"Added {openFileDialog.FileNames.Length} file(s) to the group.",
                     "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -245,35 +255,31 @@ namespace TaskbarGroupTool
             if (selectedResult != null && viewModel.SelectedGroup != null)
             {
                 viewModel.AddApplicationToGroup(selectedResult.Path);
-                MessageBox.Show($"'{selectedResult.Name}' has been added to the group '{viewModel.SelectedGroup.Name}'.", 
+                UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Added '{selectedResult.Name}'", "> Ready");
+                MessageBox.Show($"'{selectedResult.Name}' has been added to the group '{viewModel.SelectedGroup.Name}'.",
                     "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            // Handle keyboard shortcuts
             if (e.Key == Key.N && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
-                // Ctrl+N - New Group
                 NewGroupButton_Click(this, new RoutedEventArgs());
                 e.Handled = true;
             }
             else if (e.Key == Key.S && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
-                // Ctrl+S - Save Group
                 SaveGroupButton_Click(this, new RoutedEventArgs());
                 e.Handled = true;
             }
             else if (e.Key == Key.D && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
-                // Ctrl+D - Delete Group
                 DeleteGroupButton_Click(this, new RoutedEventArgs());
                 e.Handled = true;
             }
             else if (e.Key == Key.Delete)
             {
-                // Delete - Remove selected application
                 var focusedElement = Keyboard.FocusedElement as FrameworkElement;
                 if (focusedElement != null && focusedElement.Name == "ApplicationsListBox")
                 {
@@ -285,15 +291,14 @@ namespace TaskbarGroupTool
 
         private void SearchResultsListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // Start drag operation
             var listBox = sender as ListBox;
             var item = ItemsControl.ContainerFromElement(listBox, e.OriginalSource as DependencyObject) as ListBoxItem;
-            
+
             if (item != null && item.Content is SearchResult searchResult)
             {
                 var data = new DataObject(DataFormats.FileDrop, new[] { searchResult.Path });
                 data.SetData("SearchResult", searchResult);
-                
+
                 DragDrop.DoDragDrop(item, data, DragDropEffects.Copy);
             }
         }
@@ -315,12 +320,11 @@ namespace TaskbarGroupTool
         {
             if (viewModel.SelectedGroup == null)
             {
-                MessageBox.Show("Please select a group first.", "Warning", 
+                MessageBox.Show("Please select a group first.", "Warning",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Handle file drop
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = e.Data.GetData(DataFormats.FileDrop) as string[];
@@ -336,7 +340,6 @@ namespace TaskbarGroupTool
                 }
             }
 
-            // Handle search result drop
             if (e.Data.GetDataPresent("SearchResult"))
             {
                 var searchResult = e.Data.GetData("SearchResult") as SearchResult;
@@ -353,10 +356,11 @@ namespace TaskbarGroupTool
             if (viewModel.SelectedGroup != null)
             {
                 configService.ExportSingleGroup(viewModel.SelectedGroup);
+                UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Group exported", "> Ready");
             }
             else
             {
-                MessageBox.Show("Please select a group to export.", "No Group Selected", 
+                MessageBox.Show("Please select a group to export.", "No Group Selected",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -366,21 +370,19 @@ namespace TaskbarGroupTool
             var importedGroup = configService.ImportSingleGroup();
             if (importedGroup != null)
             {
-                // Check if group with same name already exists
                 var existingGroup = viewModel.Groups.FirstOrDefault(g => g.Name.Equals(importedGroup.Name, StringComparison.OrdinalIgnoreCase));
-                
+
                 if (existingGroup != null)
                 {
                     var result = MessageBox.Show(
                         $"A group named '{importedGroup.Name}' already exists.\n\n" +
                         "Do you want to replace it?",
-                        "Group Exists", 
-                        MessageBoxButton.YesNo, 
+                        "Group Exists",
+                        MessageBoxButton.YesNo,
                         MessageBoxImage.Question);
 
                     if (result == MessageBoxResult.Yes)
                     {
-                        // Replace existing group
                         var index = viewModel.Groups.IndexOf(existingGroup);
                         viewModel.Groups.RemoveAt(index);
                         viewModel.Groups.Insert(index, importedGroup);
@@ -389,15 +391,14 @@ namespace TaskbarGroupTool
                 }
                 else
                 {
-                    // Add new group
                     viewModel.Groups.Add(importedGroup);
                     viewModel.SelectedGroup = importedGroup;
                 }
-                
-                // Save the updated groups
+
                 viewModel.SaveGroups();
-                
-                MessageBox.Show($"Group '{importedGroup.Name}' imported successfully!", 
+                UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Imported '{importedGroup.Name}'", "> Ready");
+
+                MessageBox.Show($"Group '{importedGroup.Name}' imported successfully!",
                     "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -406,36 +407,35 @@ namespace TaskbarGroupTool
         {
             var groupsList = new List<TaskbarGroup>(viewModel.Groups);
             configService.CreateBackup(groupsList);
+            UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Backup created", "> Ready");
         }
 
         private void RestoreButton_Click(object sender, RoutedEventArgs e)
         {
             var availableBackups = configService.GetAvailableBackups();
-            
+
             if (!availableBackups.Any())
             {
-                MessageBox.Show("No backups available.", "No Backups", 
+                MessageBox.Show("No backups available.", "No Backups",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            // Simple restore from latest backup
             var latestBackup = availableBackups.First();
             var restoredGroups = configService.RestoreBackup(latestBackup);
-            
+
             if (restoredGroups != null)
             {
-                // Clear existing groups and add restored ones
                 viewModel.Groups.Clear();
                 foreach (var group in restoredGroups)
                 {
                     viewModel.Groups.Add(group);
                 }
-                
-                // Save the restored groups
+
                 viewModel.SaveGroups();
-                
-                MessageBox.Show($"Successfully restored {restoredGroups.Count} groups from backup!", 
+                UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Restored {restoredGroups.Count} groups", "> Ready");
+
+                MessageBox.Show($"Successfully restored {restoredGroups.Count} groups from backup!",
                     "Restore Successful", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -447,17 +447,7 @@ namespace TaskbarGroupTool
             statsWindow.ShowDialog();
         }
 
-        private void RefreshStatsButton_Click(object sender, RoutedEventArgs e)
-        {
-            LoadStatisticsData();
-        }
-
-        private void DetailedStatsButton_Click(object sender, RoutedEventArgs e)
-        {
-            var statsWindow = new StatisticsWindow();
-            statsWindow.Owner = this;
-            statsWindow.ShowDialog();
-        }
+        // ═══════════════ THEME MANAGEMENT ═══════════════
 
         private void InitializeTheme()
         {
@@ -482,54 +472,82 @@ namespace TaskbarGroupTool
             }
         }
 
+        private static Color HexColor(string hex)
+        {
+            return (Color)ColorConverter.ConvertFromString(hex);
+        }
+
         private void ApplyTheme(bool isDarkMode)
         {
             if (isDarkMode)
             {
-                Resources["PrimaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
-                Resources["SecondaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#374151"));
-                Resources["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#374151"));
-                Resources["BorderBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4B5563"));
-                Resources["TextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
-                Resources["TextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D1D5DB"));
-                Resources["AccentColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#818CF8"));
-                Resources["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
-                Resources["HeaderText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+                // Dark theme - deep, elegant dark
+                Resources["PrimaryBackground"]  = new SolidColorBrush(HexColor("#141419"));
+                Resources["SecondaryBackground"] = new SolidColorBrush(HexColor("#1C1C24"));
+                Resources["CardBackground"]      = new SolidColorBrush(HexColor("#1E1E28"));
+                Resources["BorderBrush"]         = new SolidColorBrush(HexColor("#2E2E3A"));
+                Resources["TextPrimary"]         = new SolidColorBrush(HexColor("#D4D2CC"));
+                Resources["TextSecondary"]       = new SolidColorBrush(HexColor("#7A7872"));
+                Resources["AccentColor"]         = new SolidColorBrush(HexColor("#8B7D6B"));
+                Resources["HeaderBackground"]    = new SolidColorBrush(HexColor("#0E0E12"));
+                Resources["HeaderText"]          = new SolidColorBrush(HexColor("#C8C4BC"));
+                Resources["InputBackground"]     = new SolidColorBrush(HexColor("#16161C"));
+                Resources["StatusBackground"]    = new SolidColorBrush(HexColor("#0A0A0E"));
+                Resources["StatusText"]          = new SolidColorBrush(HexColor("#5A9E5A"));
+                Resources["ActionButtonBg"]      = new SolidColorBrush(HexColor("#252530"));
+                Resources["ActionButtonText"]    = new SolidColorBrush(HexColor("#8A8780"));
+                Resources["InactiveTabText"]     = new SolidColorBrush(HexColor("#555560"));
+                Resources["ListItemHover"]       = new SolidColorBrush(HexColor("#282834"));
+                Resources["ListItemSelected"]    = new SolidColorBrush(HexColor("#323240"));
+                Resources["DangerColor"]         = new SolidColorBrush(HexColor("#8B3A3A"));
+                Resources["DangerHover"]         = new SolidColorBrush(HexColor("#A04545"));
+                Resources["SuccessColor"]        = new SolidColorBrush(HexColor("#5A9E5A"));
             }
             else
             {
-                Resources["PrimaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8F9FA"));
-                Resources["SecondaryBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-                Resources["CardBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
-                Resources["BorderBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E5E7EB"));
-                Resources["TextPrimary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
-                Resources["TextSecondary"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280"));
-                Resources["AccentColor"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6366F1"));
-                Resources["HeaderBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"));
-                Resources["HeaderText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+                // Light theme - warm industrial
+                Resources["PrimaryBackground"]  = new SolidColorBrush(HexColor("#EDEBE6"));
+                Resources["SecondaryBackground"] = new SolidColorBrush(HexColor("#E3E0D9"));
+                Resources["CardBackground"]      = new SolidColorBrush(HexColor("#F5F3EF"));
+                Resources["BorderBrush"]         = new SolidColorBrush(HexColor("#C8C4BC"));
+                Resources["TextPrimary"]         = new SolidColorBrush(HexColor("#2A2A2A"));
+                Resources["TextSecondary"]       = new SolidColorBrush(HexColor("#6B6860"));
+                Resources["AccentColor"]         = new SolidColorBrush(HexColor("#8B7D6B"));
+                Resources["HeaderBackground"]    = new SolidColorBrush(HexColor("#2A2A2A"));
+                Resources["HeaderText"]          = new SolidColorBrush(HexColor("#E8E6E1"));
+                Resources["InputBackground"]     = new SolidColorBrush(HexColor("#F9F8F5"));
+                Resources["StatusBackground"]    = new SolidColorBrush(HexColor("#1E1E1E"));
+                Resources["StatusText"]          = new SolidColorBrush(HexColor("#7CB87C"));
+                Resources["ActionButtonBg"]      = new SolidColorBrush(HexColor("#3A3A3A"));
+                Resources["ActionButtonText"]    = new SolidColorBrush(HexColor("#C8C4BC"));
+                Resources["InactiveTabText"]     = new SolidColorBrush(HexColor("#8A8780"));
+                Resources["ListItemHover"]       = new SolidColorBrush(HexColor("#DDD9D0"));
+                Resources["ListItemSelected"]    = new SolidColorBrush(HexColor("#C8C0B4"));
+                Resources["DangerColor"]         = new SolidColorBrush(HexColor("#A04040"));
+                Resources["DangerHover"]         = new SolidColorBrush(HexColor("#8A3535"));
+                Resources["SuccessColor"]        = new SolidColorBrush(HexColor("#4A7C59"));
             }
 
             Background = (Brush)Resources["PrimaryBackground"];
             UpdateThemeToggleContent(isDarkMode);
+            UpdateStatusBar($"[{DateTime.Now:HH:mm:ss}] Theme switched to {(isDarkMode ? "DARK" : "LIGHT")}", "> Ready");
         }
 
         private void UpdateThemeToggleContent(bool isDarkMode)
         {
             if (ThemeToggleButton != null)
             {
-                ThemeToggleButton.Content = isDarkMode ? "Light Mode" : "Dark Mode";
+                ThemeToggleButton.Content = isDarkMode ? "/mnt" : "/dark";
 
                 if (isDarkMode)
                 {
-                    // Light pill with dark text for good contrast on dark header
-                    ThemeToggleButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E5E7EB"));
-                    ThemeToggleButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+                    ThemeToggleButton.Background = new SolidColorBrush(HexColor("#2E2E3A"));
+                    ThemeToggleButton.Foreground = new SolidColorBrush(HexColor("#C8C4BC"));
                 }
                 else
                 {
-                    // Dark pill with light text for contrast on light header
-                    ThemeToggleButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
-                    ThemeToggleButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F9FAFB"));
+                    ThemeToggleButton.Background = new SolidColorBrush(HexColor("#2A2A2A"));
+                    ThemeToggleButton.Foreground = new SolidColorBrush(HexColor("#E8E6E1"));
                 }
             }
         }

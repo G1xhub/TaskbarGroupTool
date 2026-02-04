@@ -20,33 +20,72 @@ namespace TaskbarGroupTool.Windows
         private TaskbarGroup currentGroup;
         private List<UIElement> menuItems = new List<UIElement>();
         private StatisticsService statisticsService;
-        
-        // Import for setting AppUserModelID
+        private readonly ThemeService themeService;
+
+        // Theme colors
+        private Color bgColor;
+        private Color borderColor;
+        private Color textColor;
+        private Color textSecondaryColor;
+        private Color hoverColor;
+        private Color headerColor;
+
         [DllImport("shell32.dll", SetLastError = true)]
         static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
 
         public GroupMenuWindow(string groupName)
         {
             InitializeComponent();
-            
-            // Initialize statistics service
+
+            themeService = ThemeService.Instance;
             statisticsService = new StatisticsService();
-            
+
+            // Load theme
+            try { themeService.LoadThemePreference(); } catch { }
+            ApplyPopupTheme(themeService.IsDarkMode);
+
             // Load the group
             currentGroup = LoadGroup(groupName);
-            
-            // Set basic window properties
+
             Title = $"Group: {groupName}";
-            Width = 300;  // Initial width, will be adjusted
-            Height = 150; // Initial height, will be adjusted
+            Width = 300;
+            Height = 150;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            
-            // Create menu items for applications
+
             LoadMenuItems();
-            
-            // Close when deactivated
+
             Deactivated += GroupMenuWindow_Deactivated;
             KeyDown += GroupMenuWindow_KeyDown;
+        }
+
+        private void ApplyPopupTheme(bool isDarkMode)
+        {
+            if (isDarkMode)
+            {
+                bgColor = ColorFromHex("#1E1E28");
+                borderColor = ColorFromHex("#2E2E3A");
+                textColor = ColorFromHex("#D4D2CC");
+                textSecondaryColor = ColorFromHex("#7A7872");
+                hoverColor = ColorFromHex("#282834");
+                headerColor = ColorFromHex("#8B7D6B");
+            }
+            else
+            {
+                bgColor = ColorFromHex("#F5F3EF");
+                borderColor = ColorFromHex("#C8C4BC");
+                textColor = ColorFromHex("#2A2A2A");
+                textSecondaryColor = ColorFromHex("#6B6860");
+                hoverColor = ColorFromHex("#DDD9D0");
+                headerColor = ColorFromHex("#8B7D6B");
+            }
+
+            MainBorder.Background = new SolidColorBrush(bgColor);
+            MainBorder.BorderBrush = new SolidColorBrush(borderColor);
+        }
+
+        private static Color ColorFromHex(string hex)
+        {
+            return (Color)ColorConverter.ConvertFromString(hex);
         }
 
         private TaskbarGroup LoadGroup(string groupName)
@@ -56,18 +95,17 @@ namespace TaskbarGroupTool.Windows
                 var taskbarManager = new TaskbarManager();
                 var groups = taskbarManager.LoadGroups();
                 var group = groups.FirstOrDefault(g => g.Name == groupName);
-                
+
                 if (group == null)
                 {
-                    // Create a new group if it doesn't exist
                     group = new TaskbarGroup(groupName);
                 }
-                
+
                 return group;
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error loading group: {ex.Message}", "Error", 
+                System.Windows.MessageBox.Show($"Error loading group: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return new TaskbarGroup(groupName);
             }
@@ -78,11 +116,33 @@ namespace TaskbarGroupTool.Windows
             var stackPanel = new StackPanel
             {
                 Orientation = System.Windows.Controls.Orientation.Vertical,
-                Margin = new Thickness(5) // Reduced from 10
+                Margin = new Thickness(2)
             };
-            
+
+            // Add group name header
+            var headerText = new TextBlock
+            {
+                Text = currentGroup.Name.ToUpper(),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+                Margin = new Thickness(8, 4, 8, 6),
+                Foreground = new SolidColorBrush(headerColor),
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 10,
+                FontWeight = FontWeights.Bold
+            };
+            stackPanel.Children.Add(headerText);
+
+            // Add separator
+            var separator = new Border
+            {
+                Height = 1,
+                Background = new SolidColorBrush(borderColor),
+                Margin = new Thickness(4, 0, 4, 4)
+            };
+            stackPanel.Children.Add(separator);
+
             int appCount = 0;
-            
+
             if (currentGroup != null && currentGroup.Applications.Any())
             {
                 foreach (var appPath in currentGroup.Applications)
@@ -96,119 +156,88 @@ namespace TaskbarGroupTool.Windows
             {
                 var noAppsText = new TextBlock
                 {
-                    Text = "No applications in this group",
+                    Text = "[ NO APPLICATIONS ]",
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                     VerticalAlignment = System.Windows.VerticalAlignment.Center,
-                    Margin = new Thickness(15), // Reduced from 20
-                    Foreground = Brushes.White,
-                    FontSize = 12,
-                    FontWeight = FontWeights.Bold,
-                    TextWrapping = TextWrapping.Wrap
+                    Margin = new Thickness(12, 8, 12, 8),
+                    Foreground = new SolidColorBrush(textSecondaryColor),
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 11,
+                    FontWeight = FontWeights.Normal
                 };
                 stackPanel.Children.Add(noAppsText);
             }
-            
-            // Use MainPanel instead of MainBorder
+
             MainPanel.Children.Add(stackPanel);
-            
-            // Simple size calculation based on app count
             CalculateSimpleSize(appCount);
         }
-        
+
         private void CalculateSimpleSize(int appCount)
         {
-            // Base size - no padding at all
-            double baseWidth = 320;
-            double baseHeight = 0; // No base height
-            
-            // Size per app - adjusted for larger icons/text
-            double heightPerApp = 35;
-            // Formula: Höhe = (Anzahl × 35)
-            
-            // Calculate final size using the exact formula
+            double baseWidth = 300;
+            // Header (20) + separator (5) + apps
+            double headerHeight = 28;
+            double heightPerApp = 34;
+
             double finalWidth = baseWidth;
-            double finalHeight = appCount * heightPerApp;
-            
-            // Apply reasonable limits
-            finalWidth = Math.Max(280, Math.Min(600, finalWidth));
-            finalHeight = Math.Max(35, Math.Min(400, finalHeight)); // Min height for at least one app
-            
-            // Apply size
+            double finalHeight = headerHeight + (appCount * heightPerApp) + 16; // 16 for padding
+
+            finalWidth = Math.Max(260, Math.Min(500, finalWidth));
+            finalHeight = Math.Max(60, Math.Min(400, finalHeight));
+
             Width = finalWidth;
             Height = finalHeight;
-            
-            // Debug output
-            System.Diagnostics.Debug.WriteLine($"Apps: {appCount}, Window size: {Width}x{Height}");
         }
-        
+
         private void CalculateOptimalSize()
         {
-            // Force measure to get accurate content size
             Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             UpdateLayout();
-            
-            // Get the actual content size
+
             var contentSize = MainPanel.DesiredSize;
-            
-            // Calculate minimum dimensions
+
             double minWidth = 300;
             double minHeight = 150;
-            double maxWidth = 800;  // Increased max width
-            double maxHeight = 700; // Increased max height
-            
-            // Calculate optimal width based on content
-            double optimalWidth = Math.Max(minWidth, contentSize.Width + 60); // More padding
+            double maxWidth = 800;
+            double maxHeight = 700;
+
+            double optimalWidth = Math.Max(minWidth, contentSize.Width + 60);
             optimalWidth = Math.Min(maxWidth, optimalWidth);
-            
-            // Calculate optimal height based on content
-            double optimalHeight = Math.Max(minHeight, contentSize.Height + 60); // More padding
+
+            double optimalHeight = Math.Max(minHeight, contentSize.Height + 60);
             optimalHeight = Math.Min(maxHeight, optimalHeight);
-            
-            // Apply the calculated size
+
             Width = optimalWidth;
             Height = optimalHeight;
-            
-            // Ensure window fits on screen
+
             EnsureWindowFitsScreen();
         }
-        
+
         private void EnsureWindowFitsScreen()
         {
             var screen = System.Windows.Forms.Screen.PrimaryScreen;
             var workingArea = screen.WorkingArea;
-            
-            // Adjust width if needed
+
             if (Width > workingArea.Width)
-            {
                 Width = workingArea.Width - 20;
-            }
-            
-            // Adjust height if needed
+
             if (Height > workingArea.Height)
-            {
                 Height = workingArea.Height - 20;
-            }
-            
-            // Center window if it's too large
+
             if (Left + Width > workingArea.Right)
-            {
                 Left = workingArea.Left + (workingArea.Width - Width) / 2;
-            }
-            
+
             if (Top + Height > workingArea.Bottom)
-            {
                 Top = workingArea.Top + (workingArea.Height - Height) / 2;
-            }
         }
 
         private Border CreateMenuItem(string appPath)
         {
             var border = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                CornerRadius = new CornerRadius(4),
-                Margin = new Thickness(0, 0, 0, 0), // No margin
-                Padding = new Thickness(6, 3, 6, 3), // Slightly increased padding
+                Background = Brushes.Transparent,
+                Margin = new Thickness(2, 0, 2, 1),
+                Padding = new Thickness(8, 5, 8, 5),
                 Cursor = System.Windows.Input.Cursors.Hand
             };
 
@@ -217,33 +246,36 @@ namespace TaskbarGroupTool.Windows
                 Orientation = System.Windows.Controls.Orientation.Horizontal
             };
 
-            // Add icon - 25% larger
             var icon = GetApplicationIcon(appPath);
             var image = new Image
             {
                 Source = icon,
-                Width = 23, // Increased from 18 (18 * 1.25 = 22.5, rounded to 23)
-                Height = 23, // Increased from 18
-                Margin = new Thickness(0, 0, 6, 0) // Slightly increased margin
+                Width = 20,
+                Height = 20,
+                Margin = new Thickness(0, 0, 10, 0),
+                RenderOptions =
+                {
+                    BitmapScalingMode = BitmapScalingMode.HighQuality
+                }
             };
 
-            // Add text - 25% larger
             var textBlock = new TextBlock
             {
                 Text = Path.GetFileNameWithoutExtension(appPath),
-                Foreground = Brushes.White,
+                Foreground = new SolidColorBrush(textColor),
                 VerticalAlignment = VerticalAlignment.Center,
-                FontSize = 14, // Increased from 11 (11 * 1.25 = 13.75, rounded to 14)
-                FontWeight = FontWeights.Medium
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 12,
+                FontWeight = FontWeights.Normal
             };
 
             stackPanel.Children.Add(image);
             stackPanel.Children.Add(textBlock);
             border.Child = stackPanel;
 
-            // Add hover effects
-            border.MouseEnter += (s, e) => border.Background = new SolidColorBrush(Color.FromArgb(50, 255, 255, 255));
-            border.MouseLeave += (s, e) => border.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+            var hoverBrush = new SolidColorBrush(hoverColor);
+            border.MouseEnter += (s, e) => border.Background = hoverBrush;
+            border.MouseLeave += (s, e) => border.Background = Brushes.Transparent;
             border.MouseUp += (s, e) => LaunchApplication(appPath);
 
             return border;
@@ -270,7 +302,6 @@ namespace TaskbarGroupTool.Windows
                 // Return default icon if extraction fails
             }
 
-            // Return default application icon
             return new BitmapImage(new Uri("pack://application:,,,/Resources/default_app.png"));
         }
 
@@ -284,82 +315,72 @@ namespace TaskbarGroupTool.Windows
                     UseShellExecute = true
                 };
                 Process.Start(startInfo);
-                
-                // Record statistics
+
                 var appName = Path.GetFileNameWithoutExtension(appPath);
                 statisticsService.RecordApplicationLaunch(appPath, appName);
                 statisticsService.RecordGroupLaunch(currentGroup.Name);
-                
+
                 Close();
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Failed to launch application: {ex.Message}", "Error", 
+                System.Windows.MessageBox.Show($"Failed to launch application: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void PositionWindow()
         {
-            // Get mouse position from command line args or current position
             var mousePos = GetCursorPosition();
-            
-            // Get screen dimensions and taskbar info
+
             var screen = System.Windows.Forms.Screen.PrimaryScreen;
             var taskbarRect = GetTaskbarRect();
-            
-            // Calculate window position based on taskbar location
+
             double left, top;
-            
-            if (taskbarRect.Contains(mousePos.X, mousePos.Y)) // Click on taskbar
+
+            if (taskbarRect.Contains(mousePos.X, mousePos.Y))
             {
                 if (taskbarRect.Top == screen.Bounds.Top && taskbarRect.Width == screen.Bounds.Width)
                 {
-                    // TOP taskbar
                     top = screen.Bounds.Y + taskbarRect.Height + 10;
                     left = mousePos.X - (Width / 2);
                 }
                 else if (taskbarRect.Bottom == screen.Bounds.Bottom && taskbarRect.Width == screen.Bounds.Width)
                 {
-                    // BOTTOM taskbar
                     top = screen.Bounds.Y + screen.Bounds.Height - Height - taskbarRect.Height - 10;
                     left = mousePos.X - (Width / 2);
                 }
                 else if (taskbarRect.Left == screen.Bounds.Left)
                 {
-                    // LEFT taskbar
                     top = mousePos.Y - (Height / 2);
                     left = screen.Bounds.X + taskbarRect.Width + 10;
                 }
                 else
                 {
-                    // RIGHT taskbar
                     top = mousePos.Y - (Height / 2);
                     left = screen.Bounds.X + screen.Bounds.Width - Width - taskbarRect.Width - 10;
                 }
             }
-            else // Not click on taskbar
+            else
             {
                 top = mousePos.Y - Height - 20;
                 left = mousePos.X - (Width / 2);
             }
-            
-            // Adjust if window goes off screen
+
             if (left < screen.Bounds.Left)
                 left = screen.Bounds.Left + 10;
             if (top < screen.Bounds.Top)
                 top = screen.Bounds.Top + 10;
             if (left + Width > screen.Bounds.Right)
                 left = screen.Bounds.Right - Width - 10;
-            
-            // If window goes over taskbar
+
             if (taskbarRect.Contains((int)left, (int)top) && taskbarRect.Contains((int)(left + Width), (int)top))
                 top = screen.Bounds.Top + 10 + taskbarRect.Height;
             if (taskbarRect.Contains((int)left, (int)top))
                 left = screen.Bounds.Left + 10 + taskbarRect.Width;
             if (taskbarRect.Contains((int)(left + Width), (int)top))
                 left = screen.Bounds.Right - Width - 10 - taskbarRect.Width;
-            
+
             Left = left;
             Top = top;
         }
@@ -369,14 +390,14 @@ namespace TaskbarGroupTool.Windows
             var screen = System.Windows.Forms.Screen.PrimaryScreen;
             var bounds = screen.Bounds;
             var workingArea = screen.WorkingArea;
-            
+
             var leftDockedWidth = Math.Abs(bounds.Left - workingArea.Left);
             var topDockedHeight = Math.Abs(bounds.Top - workingArea.Top);
             var rightDockedWidth = (bounds.Width - leftDockedWidth) - workingArea.Width;
             var bottomDockedHeight = (bounds.Height - topDockedHeight) - workingArea.Height;
-            
+
             var taskbarRect = new System.Drawing.Rectangle();
-            
+
             if (leftDockedWidth > 0)
             {
                 taskbarRect.X = bounds.Left;
@@ -407,13 +428,12 @@ namespace TaskbarGroupTool.Windows
             }
             else
             {
-                // Auto-hide taskbar - use default bottom position
                 taskbarRect.X = workingArea.Left;
                 taskbarRect.Y = screen.Bounds.Height - 40;
                 taskbarRect.Width = workingArea.Width;
                 taskbarRect.Height = 40;
             }
-            
+
             return taskbarRect;
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Win32;
 using TaskbarGroupTool.Models;
 using TaskbarGroupTool.Services;
@@ -14,7 +15,8 @@ namespace TaskbarGroupTool.Windows
     {
         private readonly ApplicationSearchService searchService;
         private TaskbarGroup currentGroup;
-        
+        private readonly ThemeService themeService;
+
         public ObservableCollection<SearchResult> SearchResults { get; set; }
         public string SearchTerm { get; set; }
 
@@ -24,8 +26,42 @@ namespace TaskbarGroupTool.Windows
             searchService = new ApplicationSearchService();
             currentGroup = group;
             SearchResults = new ObservableCollection<SearchResult>();
-            
+            themeService = ThemeService.Instance;
+
             DataContext = this;
+
+            ApplyTheme(themeService.IsDarkMode);
+        }
+
+        private static Color HexColor(string hex)
+        {
+            return (Color)ColorConverter.ConvertFromString(hex);
+        }
+
+        private void ApplyTheme(bool isDarkMode)
+        {
+            if (isDarkMode)
+            {
+                Resources["WinBackground"]   = new SolidColorBrush(HexColor("#141419"));
+                Resources["WinCard"]          = new SolidColorBrush(HexColor("#1E1E28"));
+                Resources["WinBorder"]        = new SolidColorBrush(HexColor("#2E2E3A"));
+                Resources["WinInput"]         = new SolidColorBrush(HexColor("#16161C"));
+                Resources["WinTextPrimary"]   = new SolidColorBrush(HexColor("#D4D2CC"));
+                Resources["WinTextSecondary"] = new SolidColorBrush(HexColor("#7A7872"));
+                Resources["WinAccent"]        = new SolidColorBrush(HexColor("#8B7D6B"));
+                Resources["WinHover"]         = new SolidColorBrush(HexColor("#282834"));
+            }
+            else
+            {
+                Resources["WinBackground"]   = new SolidColorBrush(HexColor("#EDEBE6"));
+                Resources["WinCard"]          = new SolidColorBrush(HexColor("#F5F3EF"));
+                Resources["WinBorder"]        = new SolidColorBrush(HexColor("#C8C4BC"));
+                Resources["WinInput"]         = new SolidColorBrush(HexColor("#F9F8F5"));
+                Resources["WinTextPrimary"]   = new SolidColorBrush(HexColor("#2A2A2A"));
+                Resources["WinTextSecondary"] = new SolidColorBrush(HexColor("#6B6860"));
+                Resources["WinAccent"]        = new SolidColorBrush(HexColor("#8B7D6B"));
+                Resources["WinHover"]         = new SolidColorBrush(HexColor("#DDD9D0"));
+            }
         }
 
         private void SearchButton_Click(object sender, RoutedEventArgs e)
@@ -46,14 +82,13 @@ namespace TaskbarGroupTool.Windows
             {
                 foreach (var fileName in openFileDialog.FileNames)
                 {
-                    // Create a SearchResult from the selected file
                     var searchResult = new SearchResult
                     {
                         Name = System.IO.Path.GetFileNameWithoutExtension(fileName),
                         Path = fileName,
                         Type = GetFileType(fileName)
                     };
-                    
+
                     SearchResults.Add(searchResult);
                 }
             }
@@ -86,7 +121,7 @@ namespace TaskbarGroupTool.Windows
                 {
                     var results = searchService.SearchApplications(SearchTerm);
                     SearchResults.Clear();
-                    
+
                     foreach (var result in results.Take(20))
                     {
                         SearchResults.Add(result);
@@ -94,7 +129,7 @@ namespace TaskbarGroupTool.Windows
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Search error: {ex.Message}", "Error", 
+                    MessageBox.Show($"Search error: {ex.Message}", "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -119,22 +154,21 @@ namespace TaskbarGroupTool.Windows
             var selectedResult = SearchResultsListBox.SelectedItem as SearchResult;
             if (selectedResult != null)
             {
-                // Add to the current group
                 if (!currentGroup.Applications.Contains(selectedResult.Path))
                 {
                     currentGroup.Applications.Add(selectedResult.Path);
-                    MessageBox.Show($"'{selectedResult.Name}' has been added to the group.", 
+                    MessageBox.Show($"'{selectedResult.Name}' has been added to the group.",
                         "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("This application is already in the group.", 
+                    MessageBox.Show("This application is already in the group.",
                         "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             else
             {
-                MessageBox.Show("Please select an application from the search results.", 
+                MessageBox.Show("Please select an application from the search results.",
                     "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
