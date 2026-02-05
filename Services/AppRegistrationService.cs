@@ -9,7 +9,7 @@ namespace TaskbarGroupTool.Services
         {
             try
             {
-                var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                var appPath = System.IO.Path.Combine(AppContext.BaseDirectory, "TaskbarGroupTool.exe");
                 var appDir = System.IO.Path.GetDirectoryName(appPath);
 
                 // Register file association for .lnk files created by our app

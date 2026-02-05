@@ -231,7 +231,7 @@ namespace TaskbarGroupTool.ViewModels
                 {
                     taskbarManager.CreateTaskbarShortcut(SelectedGroup, iconPath);
                     
-                    var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                    var appPath = System.IO.Path.Combine(System.AppContext.BaseDirectory, "TaskbarGroupTool.exe");
                     var shortcutsPath = Path.Combine(Path.GetDirectoryName(appPath), "Shortcuts");
                     var shortcutPath = Path.Combine(shortcutsPath, $"{SelectedGroup.Name}.lnk");
                     

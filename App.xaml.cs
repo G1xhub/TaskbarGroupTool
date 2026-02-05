@@ -10,6 +10,7 @@ namespace TaskbarGroupTool
     {
         // Import for setting AppUserModelID
         [DllImport("shell32.dll", SetLastError = true)]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interop", "SYSLIB1054", Justification = "DllImport is sufficient for this simple P/Invoke")]
         static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
 
         protected override void OnStartup(StartupEventArgs e)

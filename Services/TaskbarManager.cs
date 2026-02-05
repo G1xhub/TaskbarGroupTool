@@ -69,9 +69,7 @@ namespace TaskbarGroupTool.Services
                 // Register application first
                 AppRegistrationService.RegisterApplication();
                 
-                var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                // Get the .exe path instead of .dll
-                var appPath = assemblyLocation.Replace(".dll", ".exe");
+                var appPath = System.IO.Path.Combine(AppContext.BaseDirectory, "TaskbarGroupTool.exe");
                 var shortcutsPath = Path.Combine(Path.GetDirectoryName(appPath), "Shortcuts");
                 
                 if (!Directory.Exists(shortcutsPath))
@@ -112,7 +110,7 @@ namespace TaskbarGroupTool.Services
                 {
                     if (key != null)
                     {
-                        var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                        var appPath = System.IO.Path.Combine(AppContext.BaseDirectory, "TaskbarGroupTool.exe");
                         key.SetValue("TaskbarGroupTool", $"\"{appPath}\" --startup");
                     }
                 }

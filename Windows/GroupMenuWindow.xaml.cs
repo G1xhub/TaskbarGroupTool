@@ -252,12 +252,9 @@ namespace TaskbarGroupTool.Windows
                 Source = icon,
                 Width = 20,
                 Height = 20,
-                Margin = new Thickness(0, 0, 10, 0),
-                RenderOptions =
-                {
-                    BitmapScalingMode = BitmapScalingMode.HighQuality
-                }
+                Margin = new Thickness(0, 0, 10, 0)
             };
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
 
             var textBlock = new TextBlock
             {

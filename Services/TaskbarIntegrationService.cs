@@ -39,7 +39,7 @@ namespace TaskbarGroupTool.Services
         private void CreateWindowsShortcut(string shortcutPath, TaskbarGroup group)
         {
             // Verwenden einer COM-freien Methode zum Erstellen von Shortcuts
-            var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var appPath = System.IO.Path.Combine(AppContext.BaseDirectory, "TaskbarGroupTool.exe");
             
             // Shortcut-Datei im Windows-Format erstellen
             using (var writer = new BinaryWriter(File.Create(shortcutPath)))
