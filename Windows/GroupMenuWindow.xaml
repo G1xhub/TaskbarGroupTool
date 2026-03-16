@@ -8,9 +8,38 @@
         ShowInTaskbar="False"
         Topmost="True">
 
+    <Window.Resources>
+        <!-- Dezente ScrollBar im Stil des Fensters -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Track" Background="Transparent"/>
+                            <Thumb x:Name="Thumb">
+                                <Thumb.Template>
+                                    <ControlTemplate TargetType="Thumb">
+                                        <Border Background="#3A3A4A" 
+                                                CornerRadius="3" 
+                                                Width="4"
+                                                Margin="1,0,1,0"/>
+                                    </ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Border Name="MainBorder" Background="#1E1E28" BorderBrush="#2E2E3A" BorderThickness="1" Padding="4,6">
-        <StackPanel Name="MainPanel" Orientation="Vertical">
-            <!-- Items will be added dynamically -->
-        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Name="MainPanel" Orientation="Vertical">
+                <!-- Items will be added dynamically -->
+            </StackPanel>
+        </ScrollViewer>
     </Border>
 </Window>
